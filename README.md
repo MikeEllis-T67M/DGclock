@@ -9,6 +9,10 @@ The DG has a semi-working, manually adjusted Pulse Clock in his office. How can 
 * Hand position sensors - will capacitive sensiing work?
 * Hand identification - pulse counting? Hand length?
 * WiFi setup - WPS only, or WPS plus minimal manual UI?
+* WPA2 only?
+* Auto-detecting slipped hands?
+* Stopping rather than spinning for small backward adjustments?
+* Leapsecond handling
 
 ## Outline solution
 
