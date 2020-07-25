@@ -27,6 +27,7 @@ def time():
     finally:
         s.close()
     val = struct.unpack("!I", msg[40:44])[0]
+    print("Converter {} to {}".format(msg[40:44], val))
     return val - NTP_DELTA
 
 

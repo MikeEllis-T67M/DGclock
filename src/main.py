@@ -19,9 +19,11 @@ tft.font(tft.FONT_Comic)
 text = "DG Clock"
 tft.text(120 - int(tft.textWidth(text)/2), 8, text, 0xFFFFFF)
 
+# Turn off the access point
 ap_if = network.WLAN(network.AP_IF)
 ap_if.active(False)
 
+# Connect as a station
 sta_if = network.WLAN(network.STA_IF)
 sta_if.active(True)
 if sta_if.isconnected():
@@ -35,17 +37,23 @@ else:
             break
         time.sleep_ms(500)
 
+# Display IP address
 text = "IP address".format(sta_if.ifconfig()[0])
 tft.text(120 - int(tft.textWidth(text)/2), 90 - int(tft.fontSize()[1]/2), text, 0xFFFFFF)
 
 text = "{}".format(sta_if.ifconfig()[0])
 tft.text(120 - int(tft.textWidth(text)/2), 120 - int(tft.fontSize()[1]/2), text, 0xFFFFFF)
 
-import ntplib
+# Try to get the current time from NTP
+#import ntplib
+#c = ntplib.NTPClient()
+#response = c.request('192,168,16,10', version=3)
+#ntp_tm = utime.localtime(response.tx_time)
 
-c = ntplib.NTPClient()
-response = c.request('192,168,16,10', version=3)
-ntp_tm = utime.localtime(response.tx_time)
+import ntptime
 
-text = "{0:02}:{1:02}:{2:02}".format(ntp_tm[3], ntp_tm[4], ntp_tm[5])
+c = ntptime.time()
+tm = utime.localtime(c)
+
+text = "{0:02}:{1:02}:{2:02}".format(tm[3], tm[4], tm[5])
 tft.text(120 - int(tft.textWidth(text)/2), 60 - int(tft.fontSize()[1]/2), text, 0xFFFFFF)

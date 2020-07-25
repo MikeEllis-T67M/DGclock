@@ -27,7 +27,7 @@ functions.
 """
 
 
-import datetime
+# import datetime
 import socket
 import struct
 import time
@@ -41,11 +41,13 @@ class NTPException(Exception):
 class NTP:
     """Helper class defining constants."""
 
-    _SYSTEM_EPOCH = datetime.date(*time.gmtime(0)[0:3])
+    #_SYSTEM_EPOCH = datetime.date(*time.gmtime(0)[0:3])
     """system epoch"""
-    _NTP_EPOCH = datetime.date(1900, 1, 1)
+    #_NTP_EPOCH = datetime.date(1900, 1, 1)
     """NTP epoch"""
-    NTP_DELTA = (_SYSTEM_EPOCH - _NTP_EPOCH).days * 24 * 3600
+    #NTP_DELTA = (_SYSTEM_EPOCH - _NTP_EPOCH).days * 24 * 3600
+    NTP_DELTA = 3155673600 # Hardcoded as we don't have the datetime library
+
     """delta between system and NTP time"""
 
     REF_ID_TABLE = {
