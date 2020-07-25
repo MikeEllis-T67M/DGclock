@@ -40,3 +40,12 @@ tft.text(120 - int(tft.textWidth(text)/2), 90 - int(tft.fontSize()[1]/2), text, 
 
 text = "{}".format(sta_if.ifconfig()[0])
 tft.text(120 - int(tft.textWidth(text)/2), 120 - int(tft.fontSize()[1]/2), text, 0xFFFFFF)
+
+import ntplib
+
+c = ntplib.NTPClient()
+response = c.request('192,168,16,10', version=3)
+ntp_tm = utime.localtime(response.tx_time)
+
+text = "{0:02}:{1:02}:{2:02}".format(ntp_tm[3], ntp_tm[4], ntp_tm[5])
+tft.text(120 - int(tft.textWidth(text)/2), 60 - int(tft.fontSize()[1]/2), text, 0xFFFFFF)
