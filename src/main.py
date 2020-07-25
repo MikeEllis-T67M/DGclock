@@ -57,3 +57,11 @@ tm = utime.localtime(utc)
 
 text = "{0:02}:{1:02}:{2:02}".format(tm[3], tm[4], tm[5])
 tft.text(120 - int(tft.textWidth(text)/2), 60 - int(tft.fontSize()[1]/2), text, 0xFFFFFF)
+
+# How do the touch-pads work?
+# Answer - they aren't an answer!
+#from machine import TouchPad, Pin
+#
+#t = TouchPad(Pin(2))
+#while True:
+#    print("Touch read: {}".format(t.read()))
