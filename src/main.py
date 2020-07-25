@@ -52,8 +52,8 @@ tft.text(120 - int(tft.textWidth(text)/2), 120 - int(tft.fontSize()[1]/2), text,
 
 import ntptime
 
-c = ntptime.time()
-tm = utime.localtime(c)
+utc = ntptime.time()
+tm = utime.localtime(utc)
 
 text = "{0:02}:{1:02}:{2:02}".format(tm[3], tm[4], tm[5])
 tft.text(120 - int(tft.textWidth(text)/2), 60 - int(tft.fontSize()[1]/2), text, 0xFFFFFF)

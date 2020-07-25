@@ -12,7 +12,7 @@ NTP_DELTA = 3155673600
 
 # The NTP host can be configured at runtime by doing: ntptime.host = 'myhost.org'
 host = "pool.ntp.org"
-host = "192.168.16.10"
+#host = "192.168.16.10"
 
 def time():
     NTP_QUERY = bytearray(48)
@@ -23,11 +23,11 @@ def time():
         s.settimeout(1)
         res = s.sendto(NTP_QUERY, addr)
         msg = s.recv(48)
-        print("Received: {}".format(msg))
+        #print("Received: {}".format(msg))
     finally:
         s.close()
     val = struct.unpack("!I", msg[40:44])[0]
-    print("Converter {} to {}".format(msg[40:44], val))
+    #print("Converter {} to {}".format(msg[40:44], val))
     return val - NTP_DELTA
 
 
