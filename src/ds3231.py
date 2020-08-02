@@ -15,28 +15,91 @@ except:
     print('Warning: machine module does not support the RTC.')
     rtc = None
 
-def bcd2dec(bcd):
-    return (((bcd & 0xf0) >> 4) * 10 + (bcd & 0x0f))
-
-def dec2bcd(dec):
-    tens, units = divmod(dec, 10)
-    return (tens << 4) + units
-
-def tobytes(num):
-    return num.to_bytes(1, 'little')
-
 class DS3231:
+    """ Interface to a DS3231 connected via the I2C bus
+    Includes support for reading and writing the RTC, Alarm1, and Alarm2, and configuring the alarm interrupt
+    or squarewave output.
+    The DS3231 will be configured to operate in 24-hour mode.
+    No timezone conversions will be applied.
+
+    May throw a "DS3231 not found" runtime error if no DS3231 is present when created.
+
+    """
     def __init__(self, i2c):
         self.ds3231 = i2c
-        self.timebuf = bytearray(7) # Main time store
-        self.alarm1  = bytearray(4) # Alarm 1 registers
-        self.alarm2  = bytearray(3) # Alarm 2 registers
-        self.control = bytearray(1) # Control register
         if DS3231_I2C_ADDR not in self.ds3231.scan():
             raise RuntimeError("DS3231 not found on I2C bus at %d" % DS3231_I2C_ADDR)
 
-    # Get the time from the DS3231 into the timebuf
+    @staticmethod
+    def bcd2dec(bcd):
+        """ Convert a BCD-encoded value in the range 0-99 to its decimcal equivalent
+        """
+        return (((bcd & 0xf0) >> 4) * 10 + (bcd & 0x0f))
+
+    @staticmethod
+    def dec2bcd(dec):
+        """ Convert a decimal value in the range 0-99 into its BCD equivalent byte
+        """
+        tens, units = divmod(dec, 10)
+        return (tens << 4) + units
+
+    @staticmethod
+    def tobytes(num):
+        """ Break a value into a list of individual bytes, least-significant first
+        """
+        return num.to_bytes(1, 'little')
+
+    @property
+    def rtc(self):
+        """ Read the DS3231 RTC and return the time as a localtime
+        """
+        pass
+
+    @rtc.setter
+    def rtc(self, time)
+        """ Set the DS3231 RTC to the time and date given
+        """
+        pass
+
+    @property
+    def alarm1(self):
+        """ Read the DS3231 Alarm1 and return it as a tuple comprising 3 values
+          * seconds since midnight 
+          * day_of_week  in the range 1-7, or 0 if in day_of_month mode
+          * day_of_month in the range 1-31, or 0 if in day_of_week mode
+        """
+        pass
+
+    @alarm1.setter
+    def alarm1(self, time, day_of_week = 0, day_of_month = 0)
+        """ Set the DS3231 Alarm1 to the time and day/date given. 
+        If both day of month (1-31) and day of week (1-7) are given, the day of month will be used
+        """
+        pass
+
+    @property
+    def alarm2(self):
+        """ Read the DS3231 Alarm2 and return the time as a localtime
+        """
+        pass
+
+    @alarm2.setter
+    def alarm2(self, time)
+        """ Set the DS3231 Alarm2 to the value given
+        """
+        pass
+
+    @property
+    def squarewave(self):
+        """ Read the current configuration of the squarewave output
+        Returns the number of pulses per second, or zero if the output is configured for alarms
+        """
+        pass
+    
+
     def get_time(self, set_rtc=False):
+        """ Get the time from the DS3231 into the timebuf
+        """
         if set_rtc:
             self.await_transition()  # For accuracy set RTC immediately after a seconds transition
         else:
@@ -100,46 +163,6 @@ class DS3231:
             self.ds3231.readfrom_mem_into(DS3231_I2C_ADDR, 0, self.timebuf)
         return self.timebuf
 
-    def get_alarm1(self):
-        """ Read the current Alarm1 settings from the DS3231
-            Alarm 1 has HH:MM:SS and either DoW or DoM
-        """
-        pass
-
-    def set_alarm1(self):
-        """ Set the Alarm1 time
-        """
-        pass
-
-    def alarm1(self, mode)
-        """ Set the Alarm1 mode - can be none, every second, minute, hour, Day/TIme, Date/Time
-            Enabling the interrupt disables the squarewave output
-        """
-        pass
-
-    def get_alarm2(self):
-        """ Read the current Alarm2 setting from the DS3231
-            Alarm 2 has HH:MM and either DoW or DoM
-        """
-        pass
-
-    def set_alarm2(self, enable):
-        """ Set the Alarm2 time
-        """
-        pass
-
-    def alarm2(self, mode):
-        """ Set the Alarm2 mode - can be none, every minute, hour, Day/TIme, Date/Time
-            Enabling the interrupt disables the squarewave output
-        """
-        pass
-
-    def set_sw(self, mode):
-        """ Configure the squarewave output to 1PPS, 1.024kHz, 4.096kHz or 8.192kHz
-            Enabling the squarewave disables both alarm interrupts
-        """
-        pass
-    
     # Test hardware RTC against DS3231. Default runtime 10 min. Return amount
     # by which DS3231 clock leads RTC in PPM or seconds per year.
     # Precision is achieved by starting and ending the measurement on DS3231
