@@ -28,10 +28,14 @@ def tobytes(num):
 class DS3231:
     def __init__(self, i2c):
         self.ds3231 = i2c
-        self.timebuf = bytearray(7)
+        self.timebuf = bytearray(7) # Main time store
+        self.alarm1  = bytearray(4) # Alarm 1 registers
+        self.alarm2  = bytearray(3) # Alarm 2 registers
+        self.control = bytearray(1) # Control register
         if DS3231_I2C_ADDR not in self.ds3231.scan():
             raise RuntimeError("DS3231 not found on I2C bus at %d" % DS3231_I2C_ADDR)
 
+    # Get the time from the DS3231 into the timebuf
     def get_time(self, set_rtc=False):
         if set_rtc:
             self.await_transition()  # For accuracy set RTC immediately after a seconds transition
@@ -40,10 +44,12 @@ class DS3231:
         return self.convert(set_rtc)
 
     def convert(self, set_rtc=False):  # Return a tuple in localtime() format (less yday)
+        """ Convert the timebuf into localtime format, optionally writing this to the ESP's internal RTC
+        """
         data = self.timebuf
         ss = bcd2dec(data[0])
         mm = bcd2dec(data[1])
-        if data[2] & 0x40:
+        if data[2] & 0x40: # Check to see if the DS3231 is in 12hr or 24 hr mode
             hh = bcd2dec(data[2] & 0x1f)
             if data[2] & 0x20:
                 hh += 12
@@ -61,14 +67,17 @@ class DS3231:
         result = YY, MM, DD, hh, mm, ss, wday -1, 0
         if set_rtc:
             if rtc is None:
-                # Best we can do is to set local time
+                # Best we can do is to set local time - this may or may not imncrement automatically
                 secs = utime.mktime(result)
                 utime.localtime(secs)
             else:
+                # There is an underlying OS RTC, so set it
                 rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0))
         return result
 
     def save_time(self):
+        """ Write the current localtime to the DS3231
+        """
         (YY, MM, mday, hh, mm, ss, wday, yday) = utime.localtime()  # Based on RTC
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 0, tobytes(dec2bcd(ss)))
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 1, tobytes(dec2bcd(mm)))
@@ -82,14 +91,55 @@ class DS3231:
             self.ds3231.writeto_mem(DS3231_I2C_ADDR, 5, tobytes(dec2bcd(MM)))
             self.ds3231.writeto_mem(DS3231_I2C_ADDR, 6, tobytes(dec2bcd(YY-1900)))
 
-    # Wait until DS3231 seconds value changes before reading and returning data
     def await_transition(self):
+        """ Wait until DS3231 seconds value changes before reading and returning data
+        """
         self.ds3231.readfrom_mem_into(DS3231_I2C_ADDR, 0, self.timebuf)
         ss = self.timebuf[0]
         while ss == self.timebuf[0]:
             self.ds3231.readfrom_mem_into(DS3231_I2C_ADDR, 0, self.timebuf)
         return self.timebuf
 
+    def get_alarm1(self):
+        """ Read the current Alarm1 settings from the DS3231
+            Alarm 1 has HH:MM:SS and either DoW or DoM
+        """
+        pass
+
+    def set_alarm1(self):
+        """ Set the Alarm1 time
+        """
+        pass
+
+    def alarm1(self, mode)
+        """ Set the Alarm1 mode - can be none, every second, minute, hour, Day/TIme, Date/Time
+            Enabling the interrupt disables the squarewave output
+        """
+        pass
+
+    def get_alarm2(self):
+        """ Read the current Alarm2 setting from the DS3231
+            Alarm 2 has HH:MM and either DoW or DoM
+        """
+        pass
+
+    def set_alarm2(self, enable):
+        """ Set the Alarm2 time
+        """
+        pass
+
+    def alarm2(self, mode):
+        """ Set the Alarm2 mode - can be none, every minute, hour, Day/TIme, Date/Time
+            Enabling the interrupt disables the squarewave output
+        """
+        pass
+
+    def set_sw(self, mode):
+        """ Configure the squarewave output to 1PPS, 1.024kHz, 4.096kHz or 8.192kHz
+            Enabling the squarewave disables both alarm interrupts
+        """
+        pass
+    
     # Test hardware RTC against DS3231. Default runtime 10 min. Return amount
     # by which DS3231 clock leads RTC in PPM or seconds per year.
     # Precision is achieved by starting and ending the measurement on DS3231
