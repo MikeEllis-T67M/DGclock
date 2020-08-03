@@ -18,6 +18,7 @@ pulse_rate     = 1000
 
 while True:
     # Pulse polarity positive
+    print("Positive pulse")
     motor_A.on()
     motor_en.on()
     utime.sleep_ms(pulse_duration)
@@ -25,13 +26,17 @@ while True:
     motor_A.off()
 
     # Wait
+    print("Pause")
     utime.sleep_ms(pulse_rate - pulse_duration)
 
     # Pulse polarity negative
+    print("Negative pulse")
     motor_B.on()
     motor_en.on()
     utime.sleep_ms(pulse_duration)
     motor_en.off() # Keep the driver disabled as much as possible to save power/heat
     motor_B.off()
 
+    # Wait
+    print("Pause again")
     utime.sleep_ms(pulse_rate - pulse_duration)
