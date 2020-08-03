@@ -15,7 +15,7 @@ motor_B.value(0)
 import utime
 
 # Let's start off with 200ms pulses once per second
-pulse_duration = 300  # Motor turning
+pulse_duration = 200  # Motor turning
 pause_duration = 0    # Motor off
 stop_duration  = 100  # Motor actively stopped
 
