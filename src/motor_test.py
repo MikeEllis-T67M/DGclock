@@ -15,9 +15,9 @@ motor_B.value(0)
 import utime
 
 # Let's start off with 200ms pulses once per second
-pulse_duration = 300
-pulse_rate     = 1000
-stop_duration  = 100
+pulse_duration = 300  # Motor turning
+pause_duration = 0    # Motor off
+stop_duration  = 100  # Motor actively stopped
 
 print("Using pins", motor_A, motor_B, motor_en)
 
@@ -33,7 +33,7 @@ while True:
 
     # Wait
     print("Pause")
-    utime.sleep_ms(pulse_rate - pulse_duration - stop_duration)
+    utime.sleep_ms(pause_duration)
 
     # Pulse polarity negative
     print("Negative pulse")
@@ -46,4 +46,4 @@ while True:
 
     # Wait
     print("Pause again")
-    utime.sleep_ms(pulse_rate - pulse_duration - stop_duration)
+    utime.sleep_ms(pause_duration)
