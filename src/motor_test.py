@@ -16,7 +16,7 @@ import utime
 
 # Let's start off with 200ms pulses once per second
 pulse_duration = 200
-pulse_rate     = 200
+pulse_rate     = 250
 
 print("Using pins", motor_A, motor_B, motor_en)
 
@@ -26,7 +26,7 @@ while True:
     motor_A.value(1)
     motor_en.value(1)
     utime.sleep_ms(pulse_duration)
-    motor_A.value(0)
+    motor_B.value(1)
     motor_en.value(0) # Keep the driver disabled as much as possible to save power/heat
 
     # Wait
@@ -35,7 +35,7 @@ while True:
 
     # Pulse polarity negative
     print("Negative pulse")
-    motor_B.value(1)
+    motor_A.value(0)
     motor_en.value(1)
     utime.sleep_ms(pulse_duration)
     motor_B.value(0)
