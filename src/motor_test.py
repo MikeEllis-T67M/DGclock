@@ -15,8 +15,8 @@ motor_B.value(0)
 import utime
 
 # Let's start off with 200ms pulses once per second
-pulse_duration = 200
-pulse_rate     = 400
+pulse_duration = 150
+pulse_rate     = 150
 
 print("Using pins", motor_A, motor_B, motor_en)
 
@@ -26,7 +26,7 @@ while True:
     motor_A.value(1)
     motor_en.value(1)
     utime.sleep_ms(pulse_duration)
-    motor_en.value(0) # Keep the driver disabled as much as possible to save power/heat
+    #motor_en.value(0) # Keep the driver disabled as much as possible to save power/heat
     motor_A.value(0)
 
     # Wait
@@ -38,7 +38,7 @@ while True:
     motor_B.value(1)
     motor_en.value(1)
     utime.sleep_ms(pulse_duration)
-    motor_en.value(0) # Keep the driver disabled as much as possible to save power/heat
+    #motor_en.value(0) # Keep the driver disabled as much as possible to save power/heat
     motor_B.value(0)
 
     # Wait
