@@ -1,6 +1,8 @@
 import machine import Pin
 import time, utime
 
+print("Starting")
+
 # Next thing - get the motor driver working to step the hands
 motor_en = machine.Pin(36, Pin.OUT)
 motor_A  = machine.Pin(37, Pin.OUT)
@@ -15,6 +17,8 @@ import utime
 # Let's start off with 200ms pulses once per second
 pulse_duration = 200
 pulse_rate     = 1000
+
+print("Using pins", motor_A, motor_B, motor_en)
 
 while True:
     # Pulse polarity positive
