@@ -99,5 +99,4 @@ while True:
     motor_en.off() # Keep the driver disabled as much as possible to save power/heat
     motor_B.off()
 
-    utime.sleep_ms(pulse_rate - pulse_duration
-
+    utime.sleep_ms(pulse_rate - pulse_duration)
