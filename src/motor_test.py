@@ -16,13 +16,17 @@ import utime
 
 print("Using pins", motor_A, motor_B, motor_en)
 
-def motor_step(pulse_duration = 200, stop_duration = 100, pause_duration = 700):
+def motor_step(pulse_duration = 200, stop_duration = 200, pause_duration = 600, hour = 0, min = 0, sec = 0):
+    t = hour * 3600 + min * 60 + sec
+
     while True:
         # Pulse polarity positive
         #print("Positive pulse")
         motor_A.value(1)
         motor_en.value(1)
         utime.sleep_ms(pulse_duration)
+        t += 1;
+        print("%02d:%02d:%02d".format((t / 3600) % 24, (t/60) % 60), t % 60)
         motor_B.value(1)
         utime.sleep_ms(stop_duration)
         motor_en.value(0) # Keep the driver disabled as much as possible to save power/heat 
@@ -36,6 +40,8 @@ def motor_step(pulse_duration = 200, stop_duration = 100, pause_duration = 700):
         motor_A.value(0)
         motor_en.value(1)
         utime.sleep_ms(pulse_duration)
+        t += 1
+        print("%02d:%02d:%02d".format((t / 3600) % 24, (t/60) % 60), t % 60)
         motor_B.value(0)
         utime.sleep_ms(stop_duration)
         motor_en.value(0) # Keep the driver disabled as much as possible to save power/heat
@@ -44,5 +50,5 @@ def motor_step(pulse_duration = 200, stop_duration = 100, pause_duration = 700):
         #print("Pause again")
         utime.sleep_ms(pause_duration)
 
-if __name__ == '__main__'
+if __name__ == '__main__':
     motor_step()
