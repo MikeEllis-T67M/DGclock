@@ -1,4 +1,4 @@
-import machine import Pin
+from machine import Pin
 import time, utime
 
 print("Starting")
