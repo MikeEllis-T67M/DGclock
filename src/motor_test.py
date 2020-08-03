@@ -4,9 +4,9 @@ import time, utime
 print("Starting")
 
 # Next thing - get the motor driver working to step the hands
-motor_en = machine.Pin(36, Pin.OUT)
-motor_A  = machine.Pin(37, Pin.OUT)
-motor_B  = machine.Pin(38, Pin.OUT)
+motor_en = Pin(36, Pin.OUT)
+motor_A  = Pin(37, Pin.OUT)
+motor_B  = Pin(38, Pin.OUT)
 
 motor_en.off()
 motor_A.off()
