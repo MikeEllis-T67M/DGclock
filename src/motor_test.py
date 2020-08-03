@@ -33,7 +33,7 @@ while True:
 
     # Wait
     print("Pause")
-    utime.sleep_ms(pulse_rate - pulse_duration) - stop_duration
+    utime.sleep_ms(pulse_rate - pulse_duration - stop_duration)
 
     # Pulse polarity negative
     print("Negative pulse")
