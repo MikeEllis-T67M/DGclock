@@ -1,4 +1,5 @@
-import machine, time, utime
+import machine import Pin
+import time, utime
 
 # Next thing - get the motor driver working to step the hands
 motor_en = machine.Pin(36, Pin.OUT)
