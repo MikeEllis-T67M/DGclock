@@ -15,9 +15,9 @@ motor_B.value(0)
 import utime
 
 # Let's start off with 200ms pulses once per second
-pulse_duration = 250
-pulse_rate     = 400
-stop_duration  = 50
+pulse_duration = 300
+pulse_rate     = 1000
+stop_duration  = 100
 
 print("Using pins", motor_A, motor_B, motor_en)
 
