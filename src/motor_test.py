@@ -26,7 +26,7 @@ def motor_step(pulse_duration = 200, stop_duration = 200, pause_duration = 600, 
         motor_en.value(1)
         utime.sleep_ms(pulse_duration)
         t += 1;
-        print("{:02d.0f}:{:02.0f}:{:02.0f}".format((t / 3600) % 24, (t/60) % 60), t % 60)
+        print("{:02d}:{:02d}:{:02d}".format((t // 3600) % 24, (t//60) % 60), t % 60)
         motor_B.value(1)
         utime.sleep_ms(stop_duration)
         motor_en.value(0) # Keep the driver disabled as much as possible to save power/heat 
@@ -41,7 +41,7 @@ def motor_step(pulse_duration = 200, stop_duration = 200, pause_duration = 600, 
         motor_en.value(1)
         utime.sleep_ms(pulse_duration)
         t += 1
-        print("{:02d.0f}:{:02.0f}:{:02.0f}".format((t / 3600) % 24, (t/60) % 60), t % 60)
+        print("{:02d}:{:02d}:{:02d}".format((t // 3600) % 24, (t//60) % 60), t % 60)
         motor_B.value(0)
         utime.sleep_ms(stop_duration)
         motor_en.value(0) # Keep the driver disabled as much as possible to save power/heat
