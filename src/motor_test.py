@@ -21,7 +21,7 @@ def motor_step(pulse_duration = 200, stop_duration = 200, pause_duration = 600, 
 
     while True:
         # Pulse polarity positive
-        #print("Positive pulse")
+        #print("Positive pulse - moves from an even number of seconds")
         motor_A.value(1)
         motor_en.value(1)
         utime.sleep_ms(pulse_duration)
@@ -36,7 +36,7 @@ def motor_step(pulse_duration = 200, stop_duration = 200, pause_duration = 600, 
         utime.sleep_ms(pause_duration)  
 
         # Pulse polarity negative
-        #print("Negative pulse")
+        #print("Negative pulse - moves frm an odd number of seconds")
         motor_A.value(0)
         motor_en.value(1)
         utime.sleep_ms(pulse_duration)

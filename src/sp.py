@@ -1,4 +1,7 @@
 DS3231_I2C_ADDR = 104
+from machine import I2C
+
+i2c = I2C(0, sda=21, scl=22)
 
 def hms2dsrtc(hour, minute, second, day_of_week, date, month, year):
     """ Convert human-normal time and date into DS format

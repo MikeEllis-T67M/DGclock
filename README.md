@@ -41,3 +41,5 @@ this into an accurate, automatic-setting clock?
 ## Outline solution
 
 Use a TTGO-T ESP32 processor with built-in WiFi, Bluetooth, GPIO and capacitive sensors driving the motor via an off-the-shelf H-bridge board. Get the current time and date via NTP over WiFi, then step the hands appropriately. Provide a stand-alone WiFi AP running a minimal UI for configuration, and/or use the two buttons for an even more minimal UI.
+
+Circuit now built and working. Motor drive is configured such that Pin 25 drives from even numbered seconds to odd seconds, while Pin 26 drives from odd seconds to even. Pulse length of around 125ms just about works, but 200ms is much more reliable. Actively stopping the hands before disabling the driver produces a "nicer" look to the movement. Stop duration about the same as the pulse duration is best - but this does seriously limit the maximum speed the clock can be moved.
