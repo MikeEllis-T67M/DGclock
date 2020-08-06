@@ -21,7 +21,7 @@ class DS3231:
     """
     def __init__(self, i2c):
         self.ds3231 = i2c
-        if DS3231_I2C_ADDR not in self.ds3231.scan():
+        if DS3231_I2C_ADDR not in self.DS3231.scan():
             raise RuntimeError("DS3231 not found on I2C bus at %d" % DS3231_I2C_ADDR)
 
 
@@ -63,13 +63,13 @@ class DS3231:
         Returns:
             bytearray in DS time format
         """        
-        ds_format = bytearray((self.dec2bcd(second),
-                               self.dec2bcd(minute),
-                               self.dec2bcd(hour),
-                               self.dec2bcd(day),
-                               self.dec2bcd(date),
-                               self.dec2bcd(month),
-                               self.dec2bcd(year % 100)))
+        ds_format = bytearray((DS3231.dec2bcd(second),
+                               DS3231.dec2bcd(minute),
+                               DS3231.dec2bcd(hour),
+                               DS3231.dec2bcd(day),
+                               DS3231.dec2bcd(date),
+                               DS3231.dec2bcd(month),
+                               DS3231.dec2bcd(year % 100)))
         if year < 1900 or year >= 2000:
             ds_format[5] += 128 # Set the century bit         
         return ds_format
@@ -83,13 +83,13 @@ class DS3231:
         Returns:
             A mktime-compatible tuple. Day of week is as in the DS format message, and day of year is zero
         """        
-        second = self.bcd2dec(ds_format[0])
-        minute = self.bcd2dec(ds_format[1])
-        hour   = self.bsd2dec(ds_format[2] & 0x3f) # Filter off the 12/24 bit
-        day    = self.bcd2dec(ds_format[3])
-        date   = self.bcd2dec(ds_format[4])
-        month  = self.bcd2dec(ds_format[5] & 0x1f) # Filter off the century bit
-        year   = self.bcd2dec(ds_format[6]) + 1900 # Assume 1900-1999
+        second = DS3231.bcd2dec(ds_format[0])
+        minute = DS3231.bcd2dec(ds_format[1])
+        hour   = DS3231.bsd2dec(ds_format[2] & 0x3f) # Filter off the 12/24 bit
+        day    = DS3231.bcd2dec(ds_format[3])
+        date   = DS3231.bcd2dec(ds_format[4])
+        month  = DS3231.bcd2dec(ds_format[5] & 0x1f) # Filter off the century bit
+        year   = DS3231.bcd2dec(ds_format[6]) + 1900 # Assume 1900-1999
 
         if (ds_format[2] & 0x60) != 0x60:
             hour -= 8 # In 12 hour mode, and PM set, but BCD conversion will have +20, so -8
