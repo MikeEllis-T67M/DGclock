@@ -85,7 +85,7 @@ class DS3231:
         """        
         second = DS3231.bcd2dec(ds_format[0])
         minute = DS3231.bcd2dec(ds_format[1])
-        hour   = DS3231.bsd2dec(ds_format[2] & 0x3f) # Filter off the 12/24 bit
+        hour   = DS3231.bcd2dec(ds_format[2] & 0x3f) # Filter off the 12/24 bit
         day    = DS3231.bcd2dec(ds_format[3])
         date   = DS3231.bcd2dec(ds_format[4])
         month  = DS3231.bcd2dec(ds_format[5] & 0x1f) # Filter off the century bit
