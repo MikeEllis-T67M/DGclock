@@ -95,7 +95,7 @@ class DS3231:
             hour -= 8 # In 12 hour mode, and PM set, but BCD conversion will have +20, so -8
 
         if (ds_format[5] & 0x80) != 0:
-            result["year"] += 100 # Update the year if the century bit is set
+            year += 100 # Update the year if the century bit is set
 
         return (year, month, day, hour, minute, second, day-1, 0)
 
