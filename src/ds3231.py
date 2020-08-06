@@ -117,8 +117,8 @@ class DS3231:
         """
         dsrtc2mhs(self.read_ds3231_rtc())
 
-    @rtc.setter
-    def rtc(self, time_to_set)
-        """ Set the DS3231 RTC to the time and date given
-        """
-        print(hms2dsrtc(time_to_set), "->", self.ds3231)
+#    @rtc.setter
+#    def rtc(self, time_to_set):
+#        """ Set the DS3231 RTC to the time and date given
+#        """
+#        print(hms2dsrtc(time_to_set), "->", self.ds3231)
