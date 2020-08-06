@@ -66,7 +66,7 @@ class DS3231:
         ds_format = bytearray((DS3231.dec2bcd(second),
                                DS3231.dec2bcd(minute),
                                DS3231.dec2bcd(hour),
-                               DS3231.dec2bcd(day),
+                               DS3231.dec2bcd(day_of_week),
                                DS3231.dec2bcd(date),
                                DS3231.dec2bcd(month),
                                DS3231.dec2bcd(year % 100)))
@@ -131,7 +131,8 @@ class DS3231:
 if __name__ == "__main__":
     from machine import I2C 
 
-    i2c = I2C(0, scl=21, sda=22)
+    print("Initialising...")
+    i2c = I2C(0, scl=22, sda=21)
 
     ds = ds3231.DS3231(i2c)
 
