@@ -21,7 +21,7 @@ class DS3231:
     """
     def __init__(self, i2c):
         self.ds3231 = i2c
-        if DS3231_I2C_ADDR not in self.DS3231.scan():
+        if DS3231_I2C_ADDR not in self.ds3231.scan():
             raise RuntimeError("DS3231 not found on I2C bus at %d" % DS3231_I2C_ADDR)
 
 
