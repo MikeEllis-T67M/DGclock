@@ -24,6 +24,9 @@ class DS3231:
         if DS3231_I2C_ADDR not in self.ds3231.scan():
             raise RuntimeError("DS3231 not found on I2C bus at %d" % DS3231_I2C_ADDR)
 
+    def __repl__(self):
+        '''Returns representation of the object'''
+        return("{}({!r})".format(self.__class__.__name__, self.ds3231))
 
     @staticmethod
     def bcd2dec(bcd):
@@ -112,21 +115,22 @@ class DS3231:
         return buffer
 
     @property
-    def rtc(self):
+    def localtime(self):
         """ Read the DS3231 RTC and return the time as a localtime
         """
         return DS3231.dsrtc2hms(self.read_ds3231_rtc())
 
-    def __repl__(self):
-        '''Returns representation of the object'''
-        return("{}({!r})".format(self.__class__.__name__, self.ds3231))
-
+    @property
+    def rtc(self):
+        """ Read the DS3231 RTC and return the time as seconds since epoch
+        """
+        return utime.mktime(DS3231.dsrtc2hms(self.read_ds3231_rtc()))
 
     @rtc.setter
     def rtc(self, time_to_set):
         """ Set the DS3231 RTC to the time and date given
         """
-        print(DS3231.hms2dsrtc(time_to_set), "->", self.ds3231)
+        print(DS3231.hms2dsrtc(utime.localtim(time_to_set)), "->", self.ds3231)
 
 if __name__ == "__main__":
     from machine import I2C 
