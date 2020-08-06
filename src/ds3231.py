@@ -53,28 +53,22 @@ class DS3231:
         return (tens << 4) + units
 
     @staticmethod
-    def hms2dsrtc(hour, minute, second, day_of_week, date, month, year):
+    def tm2dsrtc(tm):
         """ Convert human-normal time and date into DS format
         Args:
-            hour        (int): The current hour in 24-hour format - 0...23
-            minute      (int): The current minute - 0...59
-            second      (int): The current second - 0...59 - no support for leap-seconds
-            day_of_week (int): The current day of the week - 1...7 (user's choice of mapping)
-            date        (int): The current date in the month - 1...31
-            month       (int): The current month - 1...12
-            year        (int): The current year - 1900...2099 (or 00...99 for 2000...2099)
+            tm (int): The current year - 1900...2099 (or 00...99 for 2000...2099)
         Returns:
             bytearray in DS time format
         """        
-        ds_format = bytearray((DS3231.dec2bcd(second),
-                               DS3231.dec2bcd(minute),
-                               DS3231.dec2bcd(hour),
-                               DS3231.dec2bcd(day_of_week),
-                               DS3231.dec2bcd(date),
-                               DS3231.dec2bcd(month),
-                               DS3231.dec2bcd(year % 100)))
-        if year < 1900 or year >= 2000:
-            ds_format[5] += 128 # Set the century bit         
+        ds_format = bytearray((DS3231.dec2bcd(tm[5]),        # Seconds
+                               DS3231.dec2bcd(tm[4]),        # Minutes
+                               DS3231.dec2bcd(tm[3]),        # Hours
+                               DS3231.dec2bcd(tm[6]) + 1,    # Day of week
+                               DS3231.dec2bcd(tm[2]),        # Day of month
+                               DS3231.dec2bcd(tm[1]),        # Month
+                               DS3231.dec2bcd(tm[0] % 100))) # Only the year within the century
+        if tm[0] < 1900 or tm[0] >= 2000:
+            ds_format[5] += 128 # Set the century bit (embedded in the month)        
         return ds_format
 
     @staticmethod
@@ -100,7 +94,7 @@ class DS3231:
         if (ds_format[5] & 0x80) != 0:
             year += 100 # Update the year if the century bit is set
 
-        return (year, month, day, hour, minute, second, day-1, 0)
+        return (year, month, day, hour, minute, second, day-1, 0) # Build localtime format
 
     def read_ds3231_rtc(self):
         """ Read the RTC from the DS3231
@@ -130,8 +124,9 @@ class DS3231:
     def rtc(self, time_to_set):
         """ Set the DS3231 RTC to the time and date given
         """
-        print(DS3231.hms2dsrtc(utime.localtime(time_to_set)), "->", self.ds3231)
+        print(DS3231.tm2dsrtc(utime.localtime(time_to_set)), "->", self.ds3231)
 
+print(__name__)
 if __name__ == "__main__":
     from machine import I2C 
 
