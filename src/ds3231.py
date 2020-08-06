@@ -63,13 +63,13 @@ class DS3231:
         Returns:
             bytearray in DS time format
         """        
-        ds_format = bytearray((dec2bcd(second),
-                               dec2bcd(minute),
-                               dec2bcd(hour),
-                               dec2bcd(day),
-                               dec2bcd(date),
-                               dec2bcd(month),
-                               dec2bcd(year % 100)))
+        ds_format = bytearray((self.dec2bcd(second),
+                               self.dec2bcd(minute),
+                               self.dec2bcd(hour),
+                               self.dec2bcd(day),
+                               self.dec2bcd(date),
+                               self.dec2bcd(month),
+                               self.dec2bcd(year % 100)))
         if year < 1900 or year >= 2000:
             ds_format[5] += 128 # Set the century bit         
         return ds_format
@@ -83,13 +83,13 @@ class DS3231:
         Returns:
             A mktime-compatible tuple. Day of week is as in the DS format message, and day of year is zero
         """        
-        second = bcd2dec(ds_format[0])
-        minute = bcd2dec(ds_format[1])
-        hour   = bsd2dec(ds_format[2] & 0x3f) # Filter off the 12/24 bit
-        day    = bcd2dec(ds_format[3])
-        date   = bcd2dec(ds_format[4])
-        month  = bcd2dec(ds_format[5] & 0x1f) # Filter off the century bit
-        year   = bcd2dec(ds_format[6]) + 1900 # Assume 1900-1999
+        second = self.bcd2dec(ds_format[0])
+        minute = self.bcd2dec(ds_format[1])
+        hour   = self.bsd2dec(ds_format[2] & 0x3f) # Filter off the 12/24 bit
+        day    = self.bcd2dec(ds_format[3])
+        date   = self.bcd2dec(ds_format[4])
+        month  = self.bcd2dec(ds_format[5] & 0x1f) # Filter off the century bit
+        year   = self.bcd2dec(ds_format[6]) + 1900 # Assume 1900-1999
 
         if (ds_format[2] & 0x60) != 0x60:
             hour -= 8 # In 12 hour mode, and PM set, but BCD conversion will have +20, so -8
@@ -115,7 +115,7 @@ class DS3231:
     def rtc(self):
         """ Read the DS3231 RTC and return the time as a localtime
         """
-        dsrtc2mhs(self.read_ds3231_rtc())
+        self.dsrtc2mhs(self.read_ds3231_rtc())
 
 #    @rtc.setter
 #    def rtc(self, time_to_set):
