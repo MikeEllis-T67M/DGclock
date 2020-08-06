@@ -130,7 +130,7 @@ class DS3231:
     def rtc(self, time_to_set):
         """ Set the DS3231 RTC to the time and date given
         """
-        print(DS3231.hms2dsrtc(utime.localtim(time_to_set)), "->", self.ds3231)
+        print(DS3231.hms2dsrtc(utime.localtime(time_to_set)), "->", self.ds3231)
 
 if __name__ == "__main__":
     from machine import I2C 
