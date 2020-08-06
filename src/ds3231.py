@@ -117,8 +117,20 @@ class DS3231:
         """
         self.dsrtc2mhs(self.read_ds3231_rtc())
 
+    def __repl__(self):
+            '''Returns representation of the object'''
+        return("{}({!r})".format(self.__class__.__name__, self.ds3231))
+
+
 #    @rtc.setter
 #    def rtc(self, time_to_set):
 #        """ Set the DS3231 RTC to the time and date given
 #        """
 #        print(hms2dsrtc(time_to_set), "->", self.ds3231)
+
+if __name__ == "__main__":
+    from machine import I2C 
+
+    i2c = I2C(0, scl=21, sda=22)
+
+    ds = ds3231.DS3231(i2c)
