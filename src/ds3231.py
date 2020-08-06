@@ -127,9 +127,3 @@ class DS3231:
         self.ds3231.writeto_mem_from(DS3231_I2C_ADDR, 0, DS3231.tm2dsrtc(utime.localtime(time_to_set)))
 
 
-from machine import I2C 
-print("Initialising...")
-i2c = I2C(0, scl=22, sda=21)
-ds = ds3231.DS3231(i2c)
-print(i2c)
-print(ds)
