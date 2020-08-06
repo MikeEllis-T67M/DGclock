@@ -118,22 +118,18 @@ class DS3231:
     def rtc(self):
         """ Read the DS3231 RTC and return the time as seconds since epoch
         """
-        return utime.mktime(DS3231.dsrtc2hms(self.read_ds3231_rtc()))
+        return utime.mktime(self.localtime())
 
     @rtc.setter
     def rtc(self, time_to_set):
-        """ Set the DS3231 RTC to the time and date given
+        """ Set the DS3231 RTC to the time since epoch given
         """
-        print(DS3231.tm2dsrtc(utime.localtime(time_to_set)), "->", self.ds3231)
+        self.ds3231.writeto_mem_from(DS3231_I2C_ADDR, 0, DS3231.tm2dsrtc(utime.localtime(time_to_set)))
 
-print(__name__)
-if __name__ == "__main__":
-    from machine import I2C 
 
-    print("Initialising...")
-    i2c = I2C(0, scl=22, sda=21)
-
-    ds = ds3231.DS3231(i2c)
-
-    print(i2c)
-    print(ds)
+from machine import I2C 
+print("Initialising...")
+i2c = I2C(0, scl=22, sda=21)
+ds = ds3231.DS3231(i2c)
+print(i2c)
+print(ds)
