@@ -115,7 +115,7 @@ class DS3231:
     def rtc(self):
         """ Read the DS3231 RTC and return the time as a localtime
         """
-        self.dsrtc2mhs(self.read_ds3231_rtc())
+        self.dsrtc2hms(self.read_ds3231_rtc())
 
     def __repl__(self):
         '''Returns representation of the object'''
