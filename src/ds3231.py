@@ -39,7 +39,7 @@ class DS3231:
         Returns:
             int: The decimal-equivalent of the original value
         """
-        return (((bcd & 0xf0) >> 4) * 10 + (bcd & 0x0f))
+        return (((int(bcd) & 0xf0) >> 4) * 10 + (int(bcd) & 0x0f))
 
     @staticmethod
     def dec2bcd(dec):
@@ -50,7 +50,7 @@ class DS3231:
 
         Returns:
             int: The BCD-equivalent of the original value        """
-        tens, units = divmod(dec, 10)
+        tens, units = divmod(int(dec), 10)
         return (tens << 4) + units
 
     @staticmethod
