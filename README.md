@@ -38,8 +38,41 @@ this into an accurate, automatic-setting clock?
 * Leapsecond handling
   * Knowing when there is one - might come from NTP
 
+
 ## Outline solution
 
 Use a TTGO-T ESP32 processor with built-in WiFi, Bluetooth, GPIO and capacitive sensors driving the motor via an off-the-shelf H-bridge board. Get the current time and date via NTP over WiFi, then step the hands appropriately. Provide a stand-alone WiFi AP running a minimal UI for configuration, and/or use the two buttons for an even more minimal UI.
 
 Circuit now built and working. Motor drive is configured such that Pin 25 drives from even numbered seconds to odd seconds, while Pin 26 drives from odd seconds to even. Pulse length of around 125ms just about works, but 200ms is much more reliable. Actively stopping the hands before disabling the driver produces a "nicer" look to the movement. Stop duration about the same as the pulse duration is best - but this does seriously limit the maximum speed the clock can be moved.
+
+DS3231 class almost completely re-written to implement OO access methods for RTC and Alarm1. 
+
+Basic version of the main thread now working - pulses the clock fast if it is behind the realtime, but stops it if it's *"only"* an hour or so ahead as it's quicker to let real-time catch up.
+
+## To Do
+* Use the FreeRTOS RTC for current time
+* Set the DS3231 RTC from NTP
+* Periodically align the FreeRTOS RTC from the DS3231
+* Configure WiFi from a config file
+* Process a TZ description
+  * Applying the change at the right time given it's written in local time but the RTC is in UTC
+* Use the OLED for a status display
+  * Manually set hands to midnight and press "go"?
+* Set up AP
+* Build a simple UI config web form
+  * WiFi parameters
+  * Timezone description
+  * Hand position - and ensure the pulse polarity is adjusted correctly
+* Handle leap seconds (more) elegantly {???}
+
+### DS3231 class
+
+**None of these are critical for this application**
+
+Need to add support for:
+  * Alarm2
+  * Interrupts
+  * Squarewave generator
+  * Clock stop/start control
+  
+
