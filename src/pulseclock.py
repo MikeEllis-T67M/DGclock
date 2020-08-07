@@ -24,7 +24,8 @@ class PulseClock:
         self.invert     = invert
 
     def __repr__(self):
-            '''Returns representation of the object'''
+        """Returns representation of the object
+        """
         return "{}({!r})".format(self.__class__.__name__, self.pin_plus, self.pin_minus, self.pin_enable, self.pulse_time, self.dwell_timem, self.invert)
 
     def _step_even(self):
