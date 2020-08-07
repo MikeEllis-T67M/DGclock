@@ -1,8 +1,9 @@
 # ds3231_port.py Portable driver for DS3231 precison real time clock.
 # Adapted from WiPy driver at https://github.com/scudderfish/uDS3231
 
-# Author: Peter Hinch
+# Author: Peter Hinch modified by Mike Ellis
 # Copyright Peter Hinch 2018 Released under the MIT license.
+# Additions copyright Mike Ellis August 2020.
 
 import utime
 import machine
