@@ -104,18 +104,18 @@ class DS3231:
         Returns:
             bytearray in DS alarm1 format
         """        
-        if tm[2] = 0:
+        if tm[2] == 0:
             # Day of week mode since date is outside the valid range (1-31)
             ds_format = bytearray((DS3231.dec2bcd(tm[5]),               # Seconds
                                    DS3231.dec2bcd(tm[4]),               # Minutes
                                    DS3231.dec2bcd(tm[3]),               # Hours
-                                   DS3231.dec2bcd(tm[6] + 1) + 0x40)    # Day of week
+                                   DS3231.dec2bcd(tm[6] + 1) + 0x40))   # Day of week
         else:
             # Date mode since date is outside the valid range (1-31)
             ds_format = bytearray((DS3231.dec2bcd(tm[5]),               # Seconds
                                    DS3231.dec2bcd(tm[4]),               # Minutes
                                    DS3231.dec2bcd(tm[3]),               # Hours
-                                   DS3231.dec2bcd(tm[2]))               # Date
+                                   DS3231.dec2bcd(tm[2])))              # Date
         return ds_format
 
     @staticmethod
@@ -127,19 +127,20 @@ class DS3231:
         Returns:
             A mktime-compatible tuple. Day of week is as in the DS format message, and day of year is zero
         """        
-        second = DS3231.bcd2dec(ds_format[0])
-        minute = DS3231.bcd2dec(ds_format[1])
-        hour   = DS3231.bcd2dec(ds_format[2] & 0x3f) # Filter off the 12/24 bit
+        second = DS3231.bcd2dec(ds_format[0] & 0x7f) # Filter off the alarm mask bit
+        minute = DS3231.bcd2dec(ds_format[1] & 0x7f) # Filter off the alarm mask bit
+        hour   = DS3231.bcd2dec(ds_format[2] & 0x3f) # Filter off the alarm mask and 12/24 bits
+
         if (ds_format[2] & 0x60) == 0x60:
             hour -= 8 # In 12 hour mode, and PM set, but BCD conversion will have +20, so -8
 
         if ds_format[3] & 0x40: 
             # Alarm in "day of week" mode
-            day    = DS3231.bcd2dec(ds_format[3] & 0x0f) - 1 # DS range 1-7, TM range 0-6
+            day    = DS3231.bcd2dec(ds_format[3] & 0x0f) - 1 # DS range 1-7, TM range 0-6. Filter off the alarm mask bit.
             date   = 0                                       # TM valid range is 1-31
         else:
             day    = 0                                       # Strictly speaking not correct
-            date   = DS3231.bcd2dec(ds_format[3] & 0x3f)
+            date   = DS3231.bcd2dec(ds_format[3] & 0x3f)     # Filter off the alarm mask and day/date mode bits
 
         month  = 0
         year   = 0
@@ -164,7 +165,7 @@ class DS3231:
         Args:
 
         Returns:
-            A DS3231 formatted bytearray for addresses 7-10 inclusive
+            A DS3231 formatted bytearray for addresses 7-10 inclusive, including all Alarm Mask bits but NOT the Alarm Interupt Enable bit
         """    
         buffer = bytearray(4)
         self.ds3231.readfrom_mem_into(DS3231_I2C_ADDR, 7, buffer)
@@ -180,7 +181,7 @@ class DS3231:
     def rtc(self):
         """ Read the DS3231 RTC and return the time as seconds since epoch
         """
-        return utime.mktime(self.localtime)
+        return utime.mktime(self.rtc_tm)
 
     @rtc.setter
     def rtc(self, time_to_set):
@@ -202,7 +203,6 @@ class DS3231:
             AL1 only has Day/Date:HH:MM:SS fields. YY and MON will therefore always be zero.
             If the DS AL1 is in Date mode, then Date will be in the range 1-31 and Day will be 0.
             if the DS AL1 is in Day of Week mode, then Date will be 0 Day will be in the range 0-6.
-        
         """
         return DS3231.dsal12tm(self.read_ds3231_alarm1())
 
@@ -216,6 +216,7 @@ class DS3231:
         Notes:
             AL1 only uses Day/Date:HH:MM:SS fields. 
             If Date=0 then Day mode is used, otherwise the date mode is used.
-        
+            The alarm interrupt will be set to "precise match" - i.e. Day/Date, HH:MM:SS must match exactly.
+            The alarm interrupt enable will not be altered.        
         """
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 7, DS3231.tm2dsal1(time_to_set))
