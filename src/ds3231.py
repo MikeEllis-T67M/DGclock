@@ -193,6 +193,15 @@ class DS3231:
         """
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 0, DS3231.tm2dsrtc(utime.localtime(time_to_set)))
 
+    @rtc_tm.setter
+    def rtc_tm(self, time_to_set):
+        """ Set the DS3231 RTC from a tm struct
+
+        Args:
+            time_to_set (tuple): Time to set as a tm tuple
+        """
+        self.ds3231.writeto_mem(DS3231_I2C_ADDR, 0, DS3231.tm2dsrtc(time_to_set))
+
     @property
     def alarm1_tm(self):
         """ Read the DS3231 RTC and return the time as a tm tuple
