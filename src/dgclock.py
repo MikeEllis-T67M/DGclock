@@ -1,4 +1,5 @@
 from machine import I2C, Pin
+from utime import sleep_ms
 import ds3231
 import pulseclock
 
@@ -7,9 +8,9 @@ ds = ds3231.DS3231(i2c)
 
 # Read the NV stored hand position
 hand_position = ds.alarm1_tm
-invert = handposition[5] % 2 == 1 # Is the second hand pointing to an even or odd number?
+invert = hand_position[5] % 2 == 1 # Is the second hand pointing to an even or odd number?
 
-pc = pulseclock.Pulseclock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 200, 200, invert)
+pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 200, 200, invert)
 
 while True:
     current_time = ds.rtc_tm
@@ -23,21 +24,15 @@ while True:
 
     if diff > 0 or diff < -3600: # If the difference is around minus one hour, it's quicker just to stop the clock
         # Update the stored hand position and step the clock
-        hand_position[5] += 1
-        if hand_position[5] > 59:
-            hand_position[5] -= 60
-            hand_position[4] += 1
-
-        if hand_position[4] > 59:
-            hand_position[4] -= 60
-            hand_position[3] += 1
-
-        if hand_position[3] > 12:
-            hand_position[3] -= 12
+        display += 1
+        display %= 43200
+        new_hand_position = (0, 0, 0, (display / 3600), (display / 60) % 60, display % 60, 0, 0) 
 
         # Update the stored hand position
-        ds.alarm1_tm = hand_position
+        ds.alarm1_tm = new_hand_position
 
         # Move the clock - note that there is a potential race condition here
         pc.step()
+    else:
+        sleep_ms(100)
 
