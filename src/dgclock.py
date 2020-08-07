@@ -32,7 +32,7 @@ while True:
 
         # Move the clock - note that there is a potential race condition here
         pc.step()
+        print("RTC:{} Old:{} New:{}".format(current,display,new_display))
     else:
         sleep_ms(100)
 
-    print("RTC:{} Old:{} New:{}".format(current,display,new_display))
