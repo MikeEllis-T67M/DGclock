@@ -35,5 +35,5 @@ try:
         else:
             sleep_ms(100)
 except:
-    ds.rtc_tm
-    ds.alarm1_tm
+    print(ds.rtc_tm)
+    print(ds.alarm1_tm)
