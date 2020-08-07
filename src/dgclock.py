@@ -24,7 +24,7 @@ try:
         if diff > 0 or diff < -3600: # If the difference is around minus one hour, it's quicker just to stop the clock
             # Update the stored hand position and step the clock
             display = (display + 1) % 43200
-            new_hand_position = (0, 0, 0, int(display / 3600), int(display / 60) % 60, display % 60, 0, 0) 
+            new_hand_position = (0, 0, 0, (display // 3600), (display // 60) % 60, display % 60, 0, 0) 
     
             # Update the stored hand position
             ds.alarm1_tm = new_hand_position
