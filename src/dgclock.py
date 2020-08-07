@@ -11,7 +11,7 @@ hand_position = ds.alarm1_tm
 invert        = hand_position[5] % 2 == 1 # Is the second hand pointing to an even or odd number?
 display       = hand_position[3] * 3600 + hand_position[4] * 60 + hand_position[5]  % 43200
 
-pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 200, 200, invert)
+pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 150, 100, invert)
 try:
     while True:
         current_time = ds.rtc_tm
