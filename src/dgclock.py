@@ -24,9 +24,8 @@ while True:
 
     if diff > 0 or diff < -3600: # If the difference is around minus one hour, it's quicker just to stop the clock
         # Update the stored hand position and step the clock
-        display += 1
-        display %= 43200
-        new_hand_position = (0, 0, 0, (display / 3600), (display / 60) % 60, display % 60, 0, 0) 
+        new_display = (display + 1) % 43200
+        new_hand_position = (0, 0, 0, (new_display / 3600), (new_display / 60) % 60, new_display % 60, 0, 0) 
 
         # Update the stored hand position
         ds.alarm1_tm = new_hand_position
@@ -36,3 +35,4 @@ while True:
     else:
         sleep_ms(100)
 
+    print("RTC:{} Old:{} New:{}".format(current,display,new_display))
