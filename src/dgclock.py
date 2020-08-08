@@ -93,7 +93,7 @@ def dgclock():
                         rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
             else:
                 recent_sync = False
-        finally:
-            # Try to relinquish the I2C bus
-            i2c.deinit()
-            del i2c
+    finally:
+        # Try to relinquish the I2C bus
+        i2c.deinit()
+        del i2c
