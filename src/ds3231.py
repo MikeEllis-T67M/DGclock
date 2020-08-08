@@ -95,7 +95,7 @@ class DS3231:
         if (ds_format[5] & 0x80) != 0:
             year += 100 # Update the year if the century bit is set
 
-        return utime.gmtime(int(utime.mktime((year, month, date, hour, minute, second, 0, 0)))) # Fill in the day-of-week and day-of-year
+        return utime.gmtime(int(utime.mktime((year, month, date, hour, minute, second, 0, 0, 0)))) # Fill in the day-of-week and day-of-year, andforce UTC conversion
 
     @staticmethod
     def tm2dsal1(tm):

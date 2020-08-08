@@ -29,7 +29,7 @@ def do_connect(ssid, password, hostname):
         while not sta_if.isconnected():
             pass
     
-    print('network config:', sta_if.ifconfig())
+
     
 wifi = load_settings("wifi.json")
 
