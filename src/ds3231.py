@@ -53,7 +53,7 @@ class DS3231:
         """
         try:
             tens, units = divmod(int(dec), 10)
-        except as e:
+        except Exception as e:
             sys.print_exception(e)
             print("While converting decimal = {}".format(dec))
         return (tens << 4) + units
