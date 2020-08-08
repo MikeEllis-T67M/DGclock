@@ -15,8 +15,8 @@ hand_position = ds.alarm1_tm
 invert        = hand_position[5] % 2 == 1 # Is the second hand pointing to an even or odd number?
 display       = hand_position[3] * 3600 + hand_position[4] * 60 + hand_position[5]  % 43200
 
-# Initialise the pulse clock itself
-pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 150, 100, invert)
+# Initialise the pulse clock itself - pulses of 175/100 seem reliable
+pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 175, 100, invert)
 
 while True:
     # Convert current time to seconds since 00:00:00 (12-hour clock mode)
@@ -35,9 +35,9 @@ while True:
         pc.step()
     else:
         sleep_ms(100)
-        
+
     # Re-sync the clocks every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
-    if (current_time % 900) == 62:
+    if (current % 900) == 62:
         if rtc.synced():
             ds_rtc_tm = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
         else:
