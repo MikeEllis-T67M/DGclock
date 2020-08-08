@@ -42,7 +42,7 @@ def dgclock():
         print("DS3231 time   : {}".format(ds.rtc_tm))
         print("Hands position: {}".format(ds.alarm1_tm))
 
-        # Connect to the WiFi
+        # Connect to the WiFi 
         wifi = load_settings("wifi.json")
         do_connect(wifi['SSID'], wifi['Password'], wifi['Hostname'])
 
