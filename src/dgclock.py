@@ -82,7 +82,7 @@ def dgclock():
         # Re-sync the clocks every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
         #if (current % 900) == 62:  DEBUG
         if (current % 60) == 2:
-            if !recent_sync:
+            if not recent_sync:
                 recent_sync = True
                 if rtc.synced():
                     print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now()))
