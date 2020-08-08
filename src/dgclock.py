@@ -58,8 +58,8 @@ def dgclock():
         invert        = hand_position[5] % 2 == 1 # Is the second hand pointing to an even or odd number?
         display       = hand_position[3] * 3600 + hand_position[4] * 60 + hand_position[5]  % 43200
 
-        # Initialise the pulse clock itself - pulses of 175/100 seem reliable
-        pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 175, 100, invert)
+        # Initialise the pulse clock itself - pulses of 200/100 seem reliable
+        pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 200, 100, invert)
 
         while True:
             # Convert current time to seconds since 00:00:00 (12-hour clock mode)

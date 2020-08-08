@@ -50,11 +50,9 @@ DS3231 class almost completely re-written to implement OO access methods for RTC
 Basic version of the main thread now working - pulses the clock fast if it is behind the realtime, but stops it if it's *"only"* an hour or so ahead as it's quicker to let real-time catch up.
 
 ## To Do
-* Use the FreeRTOS RTC for current time
-* Set the DS3231 RTC from NTP
-* Periodically align the FreeRTOS RTC from the DS3231
-* Configure WiFi from a config file
-* Process a TZ description
+* Set the DS3231 RTC from NTP - kinda done, but via the FreeRTOS RTC which runs in localtime mode not UTC, so.... 
+* Periodically align the FreeRTOS RTC from the DS3231 - set to every 60 seconds for debug purposes
+* Process a TZ description - tricky given that the FreeRTOS RTC runs in localtime
   * Applying the change at the right time given it's written in local time but the RTC is in UTC
 * Use the OLED for a status display
   * Manually set hands to midnight and press "go"?
