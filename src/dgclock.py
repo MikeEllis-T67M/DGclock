@@ -50,6 +50,7 @@ def dgclock():
     rtc.init(ds.rtc_tm)
     print("RTC set to    : {}".format(rtc.now()))
     rtc.ntp_sync("pool.ntp.org", update_period = 900)
+    recent_sync = False
     
     # Read the NV stored hand position
     hand_position = ds.alarm1_tm
@@ -66,6 +67,7 @@ def dgclock():
     
         # How far apart are the hands - allowing for wrap-around
         diff = current - display 
+        print("Time:{} Hands:{} Delta:{}".format(current, display, diff))
         if diff > 0 or diff < -7200: # If the difference is less than two hours, it's quicker just to stop the clock
             # Update the stored hand position
             display           = (display + 1) % 43200
@@ -80,12 +82,16 @@ def dgclock():
         # Re-sync the clocks every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
         #if (current % 900) == 62:  DEBUG
         if (current % 60) == 2:
-            if rtc.synced():
-                print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now()))
-                ds_rtc_tm = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
-            else:
-                print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now()))
-                rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
+            if !recent_sync:
+                recent_sync = True
+                if rtc.synced():
+                    print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now()))
+                    ds.rtc_tm = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
+                else:
+                    print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now()))
+                 rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
+        else:
+            recent_sync = False
 
 if __name__ == '__main__':
     dgclock()
