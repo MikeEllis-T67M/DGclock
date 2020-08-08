@@ -38,6 +38,9 @@ def dgclock():
     i2c = I2C(0, scl=22, sda=21)
     ds  = ds3231.DS3231(i2c)
     
+    print("DS3231 time   : {}".format(ds.rtc_tm))
+    print("Hands position: {}".format(ds.alarm1_tm))
+
     # Connect to the WiFi
     wifi = load_settings("wifi.json")
     do_connect(wifi['SSID'], wifi['Password'], wifi['Hostname'])
@@ -45,6 +48,7 @@ def dgclock():
     # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
     rtc = RTC()
     rtc.init(ds.rtc_tm)
+    print("RTC set to    : {}".format(rtc.now()))
     rtc.ntp_sync("pool.ntp.org", update_period = 900)
     
     # Read the NV stored hand position
@@ -74,10 +78,13 @@ def dgclock():
             sleep_ms(100)
     
         # Re-sync the clocks every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
-        if (current % 900) == 62:
+        #if (current % 900) == 62:  DEBUG
+        if (current % 60) == 2:
             if rtc.synced():
+                print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now()))
                 ds_rtc_tm = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
             else:
+                print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now()))
                 rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
 
 if __name__ == '__main__':
