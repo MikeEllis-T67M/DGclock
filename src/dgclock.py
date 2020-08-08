@@ -68,7 +68,7 @@ def dgclock():
 
             # How far apart are the hands - allowing for wrap-around
             diff = current - display 
-            #print("Time:{} Hands:{} Delta:{}".format(current, display, diff))
+            print("Time:{} Hands:{} Delta:{}".format(current, display, diff))
             if diff > 0 or diff < -7200: # If the difference is less than two hours, it's quicker just to stop the clock
                 # Update the stored hand position
                 display           = (display + 1) % 43200

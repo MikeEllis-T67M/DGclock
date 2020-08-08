@@ -30,7 +30,8 @@ class PulseClock:
 
     def _step_even(self):
         """ Step the clock forward one even second (0-1, 2-3, 4-5 etc)
-        """        
+        """   
+        print("Even")     
         self.pin_enable.value(0)        # Ensure the motor is disabled
 
         self.pin_plus.value(1)          # Set up an "even" pulse
@@ -49,6 +50,7 @@ class PulseClock:
     def _step_odd(self):
         """ Step the clock forward one off second (1-2, 3-4, 5-6 etc)
         """
+        print("Odd")
         self.pin_enable.value(0)        # Ensure the motor is disabled
 
         self.pin_plus.value(0)          # Set up an "even" pulse
