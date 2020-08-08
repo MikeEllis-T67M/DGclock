@@ -49,8 +49,13 @@ class DS3231:
             dec (int): The number to convert from decimal - valid range 0...99
 
         Returns:
-            int: The BCD-equivalent of the original value        """
-        tens, units = divmod(int(dec), 10)
+            int: The BCD-equivalent of the original value        
+        """
+        try:
+            tens, units = divmod(int(dec), 10)
+        except as e:
+            sys.print_exception(e)
+            print("While converting decimal = {}".format(dec))
         return (tens << 4) + units
 
     @staticmethod

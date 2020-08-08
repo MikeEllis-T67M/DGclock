@@ -16,13 +16,6 @@ print(''.join('{:02x} '.format(x) for x in ds.read_ds3231_rtc()))
 ap_if = WLAN(AP_IF)
 ap_if.active(False)
 
-# Connect as a station
-sta_if = WLAN(STA_IF)
-sta_if.active(True)
-sta_if.connect("Claremont", "1025Anne2018")
-sta_if.isconnected()
-sta_if.ifconfig()
-
 # set up background NTP synchronisations
 rtc.ntp_sync("ntp.pool.org", update_period = 900)
 

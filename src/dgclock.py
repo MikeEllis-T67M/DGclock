@@ -96,4 +96,4 @@ def dgclock():
     finally:
         # Try to relinquish the I2C bus
         i2c.deinit()
-        del i2c
+        # del i2c
