@@ -31,7 +31,6 @@ try:
     
             # Move the clock - note that there is a potential race condition here
             pc.step()
-            print("RTC:{} Old:{} Diff:{}  New:{}".format(current, display, diff, new_hand_position))
         else:
             sleep_ms(100)
 except:
