@@ -64,7 +64,7 @@ class DS3231:
         ds_format = bytearray((DS3231.dec2bcd(tm[5]),        # Seconds
                                DS3231.dec2bcd(tm[4]),        # Minutes
                                DS3231.dec2bcd(tm[3]),        # Hours
-                               DS3231.dec2bcd(tm[6] + 1),    # Day of week - TM has days 0-6, DS has 1-7
+                               DS3231.dec2bcd(tm[6]),        # Day of week
                                DS3231.dec2bcd(tm[2]),        # Day of month
                                DS3231.dec2bcd(tm[1]),        # Month
                                DS3231.dec2bcd(tm[0] % 100))) # Only the year within the century
@@ -95,7 +95,7 @@ class DS3231:
         if (ds_format[5] & 0x80) != 0:
             year += 100 # Update the year if the century bit is set
 
-        return (year, month, day, hour, minute, second, day-1, 0) # Build localtime format
+        return utime.gmtime(int(utime.mktime((year, month, date, hour, minute, second, 0, 0)))) # Fill in the day-of-week and day-of-year
 
     @staticmethod
     def tm2dsal1(tm):
@@ -110,7 +110,7 @@ class DS3231:
             ds_format = bytearray((DS3231.dec2bcd(tm[5]),               # Seconds
                                    DS3231.dec2bcd(tm[4]),               # Minutes
                                    DS3231.dec2bcd(tm[3]),               # Hours
-                                   DS3231.dec2bcd(tm[6] + 1) + 0x40))   # Day of week
+                                   DS3231.dec2bcd(tm[6]) + 0x40))       # Day of week and doy-of-week mode
         else:
             # Date mode since date is outside the valid range (1-31)
             ds_format = bytearray((DS3231.dec2bcd(tm[5]),               # Seconds
@@ -137,7 +137,7 @@ class DS3231:
 
         if ds_format[3] & 0x40: 
             # Alarm in "day of week" mode
-            day    = DS3231.bcd2dec(ds_format[3] & 0x0f) - 1 # DS range 1-7, TM range 0-6. Filter off the alarm mask bit.
+            day    = DS3231.bcd2dec(ds_format[3] & 0x0f)     # Filter off the alarm mask bit.
             date   = 0                                       # TM valid range is 1-31
         else:
             day    = 0                                       # Strictly speaking not correct
@@ -146,7 +146,7 @@ class DS3231:
         month  = 0
         year   = 0
 
-        return (year, month, day, hour, minute, second, day-1, 0) # Build localtime format
+        return (year, month, day, hour, minute, second, day, 0) # Build localtime format
 
     def read_ds3231_rtc(self):
         """ Read the RTC from the DS3231
