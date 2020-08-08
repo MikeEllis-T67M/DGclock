@@ -89,7 +89,7 @@ def dgclock():
                     ds.rtc_tm = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
                 else:
                     print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now()))
-                 rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
+                    rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
         else:
             recent_sync = False
 
