@@ -7,7 +7,7 @@ i2c = I2C(0, scl=22, sda=21)
 ds = ds3231.DS3231(i2c)
 
 # Set the FreeRTOS RTC from the DS3231 battery-backed RTC
-rtc = machine.RTC()
+rtc = RTC()
 rtc.init(ds.rtc_tm)
 
 # Read the NV stored hand position
@@ -39,7 +39,7 @@ try:
             sleep_ms(100)
 
         # Re-sync the clocks every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
-        if (current_time % 900) == 62 
+        if (current_time % 900) == 62:
             if rtc.synced():
                 ds_rtc_tm = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
             else:
