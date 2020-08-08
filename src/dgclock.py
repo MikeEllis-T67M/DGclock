@@ -38,8 +38,12 @@ try:
         else:
             sleep_ms(100)
 
-        if (current_time % 3600) = 2 # Reset the FreeRTOS RTC from the DS3231 at two seconds past each hour
-            rtc.init(ds.rtc_tm)
+        # Re-sync the clocks every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
+        if (current_time % 900) == 62 
+            if rtc.synced():
+                ds_rtc_tm = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
+            else:
+                rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
 except:
     print(ds.rtc_tm)
     print(ds.alarm1_tm)
