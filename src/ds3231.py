@@ -62,10 +62,11 @@ class DS3231:
     def tm2dsrtc(tm):
         """ Convert tm format tuple into DS3231 RTC register format
         Args:
-            tm (tuple): The alarm time in TM format - can specify day of week or date, not both. Will default to date if both are set.
+            tm (tuple): The time in TM format - day-of-year is ignored, and day-of-week is used as given (no validation)
         Returns:
             bytearray in DS time format
-        """        
+        """
+        print("Converting :", tm)        
         ds_format = bytearray((DS3231.dec2bcd(tm[5]),        # Seconds
                                DS3231.dec2bcd(tm[4]),        # Minutes
                                DS3231.dec2bcd(tm[3]),        # Hours
@@ -85,7 +86,7 @@ class DS3231:
 
         Returns:
             A mktime-compatible tuple. Day of week is as in the DS format message, and day of year is zero
-        """        
+        """
         second = DS3231.bcd2dec(ds_format[0])
         minute = DS3231.bcd2dec(ds_format[1])
         hour   = DS3231.bcd2dec(ds_format[2] & 0x3f) # Filter off the 12/24 bit
