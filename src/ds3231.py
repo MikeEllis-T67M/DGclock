@@ -66,7 +66,6 @@ class DS3231:
         Returns:
             bytearray in DS time format
         """
-        print("Converting :", tm)        
         ds_format = bytearray((DS3231.dec2bcd(tm[5]),        # Seconds
                                DS3231.dec2bcd(tm[4]),        # Minutes
                                DS3231.dec2bcd(tm[3]),        # Hours
@@ -111,6 +110,7 @@ class DS3231:
         Returns:
             bytearray in DS alarm1 format
         """        
+        print("Alarm 1 <- {}".format(tm))        
         if tm[2] == 0:
             # Day of week mode since date is outside the valid range (1-31)
             ds_format = bytearray((DS3231.dec2bcd(tm[5]),               # Seconds
@@ -118,7 +118,7 @@ class DS3231:
                                    DS3231.dec2bcd(tm[3]),               # Hours
                                    DS3231.dec2bcd(tm[6]) + 0x40))       # Day of week and doy-of-week mode
         else:
-            # Date mode since date is outside the valid range (1-31)
+            # Date mode since date is not zero
             ds_format = bytearray((DS3231.dec2bcd(tm[5]),               # Seconds
                                    DS3231.dec2bcd(tm[4]),               # Minutes
                                    DS3231.dec2bcd(tm[3]),               # Hours
