@@ -1,37 +1,11 @@
-from machine import I2C, Pin, RTC
+from machine import I2C, Pin, RTC, display
 from utime import sleep_ms, time
 import ujson
 
-import pulseclock
-
-def load_settings(settings_file):
-  try:
-    fd = open(settings_file)
-    encoded = fd.read()
-    fd.close()
-    settings = ujson.loads(encoded)
-    return settings
-  except Exception as e:
-    print(settings_file + ": read error: " + str(e))
 import ds3231
-
-def do_connect(ssid, password, hostname):
-    import network
-    
-    ap_if = network.WLAN(network.AP_IF)
-    ap_if.active(False)
-    
-    sta_if = network.WLAN(network.STA_IF)
-    if not sta_if.isconnected():
-        print('connecting to network...')
-        sta_if.active(True)
-        sleep_ms(100)
-        sta_if.config(dhcp_hostname=hostname)
-        sta_if.connect(ssid, password)
-        while not sta_if.isconnected():
-            sleep_ms(100)
-
-    print('network config:', sta_if.ifconfig())
+import pulseclock
+import settings
+import wifi
 
 def dgclock():
     try:
@@ -43,8 +17,8 @@ def dgclock():
         print("Hands position: {}".format(ds.alarm1_tm))
 
         # Connect to the WiFi 
-        wifi = load_settings("wifi.json")
-        do_connect(wifi['SSID'], wifi['Password'], wifi['Hostname'])
+        wifi_settings = load_settings("wifi.json")
+        connect(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
 
         # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
         rtc = RTC()
@@ -73,7 +47,8 @@ def dgclock():
                 # Update the stored hand position
                 display           = (display + 1) % 43200
                 new_hand_position = (0, 0, 0, (display // 3600), (display // 60) % 60, display % 60, 0, 0) 
-                #print("Hands moved to {}".format(new_hand_position))  # DEBUG
+                if new_hand_position[6] > 0:
+                    print("Hands moved to {}".format(new_hand_position))  # DEBUG
                 ds.alarm1_tm      = new_hand_position
 
                 # Move the clock - note that there is a potential race condition here

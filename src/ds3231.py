@@ -110,7 +110,9 @@ class DS3231:
         Returns:
             bytearray in DS alarm1 format
         """        
-        print("Alarm 1   <-   {}".format(tm))   # DEBUG     
+        if tm[6] > 0:
+            print("Alarm 1   <-   {}".format(tm))   # DEBUG     
+
         if tm[2] == 0:
             # Day of week mode since date is outside the valid range (1-31)
             ds_format = bytearray((DS3231.dec2bcd(tm[5]),               # Seconds
@@ -235,6 +237,8 @@ class DS3231:
             The alarm interrupt will be set to "precise match" - i.e. Day/Date, HH:MM:SS must match exactly.
             The alarm interrupt enable will not be altered.        
         """
-        #print("Before          {}".format(time_to_set))
+        if time_to_set[6] > 0:
+            print("Before          {}".format(time_to_set))
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 7, DS3231.tm2dsal1(time_to_set))
-        #print("After           {} ({})".format(time_to_set, self.alarm1_tm))
+        if time_to_set[6] > 0:
+            print("After           {}".format(time_to_set))
