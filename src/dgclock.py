@@ -1,14 +1,32 @@
 from machine import I2C, Pin, RTC
 from utime import sleep_ms, time
 import ujson
+import display
 
 import ds3231
 import pulseclock
 import settings
 import wifi
 
+def text_centred(tft, text, vpos):
+    """ Display some text centred on the screen
+
+    Args:
+        tft  (TFT display): The display to use
+        text (string)     : The text to display
+        vpos (int)        : The vertical position on the screen
+    """    
+    tft.text(120 - int(tft.textWidth(text)/2), vpos - int(tft.fontSize()[1]/2), text)
+
 def dgclock():
     try:
+        # Initialise the display
+        tft = display.TFT() 
+        tft.init(tft.ST7789,bgr=False,rot=tft.LANDSCAPE, miso=17,backl_pin=4,backl_on=1, mosi=19, clk=18, cs=5, dc=16)
+        tft.setwin(40,52,320,240)
+        tft.font(tft.FONT_Comic) # It's big and easy to read...
+        text.centred(tft, "DG Clock", 8)
+
         # Initialise the DS3231 battery-backed RTC
         i2c = I2C(0, scl=22, sda=21)
         ds  = ds3231.DS3231(i2c)
@@ -18,7 +36,8 @@ def dgclock():
 
         # Connect to the WiFi 
         wifi_settings = settings.load_settings("wifi.json")
-        wifi.connect(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
+        ip_addr       = wifi.connect(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
+        text.centred(tft, "{}".format(ip_addr), 20)
 
         # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
         rtc = RTC()
@@ -53,6 +72,9 @@ def dgclock():
 
                 # Move the clock - note that there is a potential race condition here
                 pc.step()
+
+                text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(current_time[3], current_time[4], current_time[5], 32)
+                text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(new_hand_position[3], new_hand_position[4], new_hand_position[5]), 32)
             else:
                 sleep_ms(100)
 

@@ -8,7 +8,10 @@ def connect(ssid, password, hostname):
         ssid     (string): The network SSID to connect to
         password (string): The password for the network
         hostname (string): The hostname to register as
-    """    
+    
+    Returns:
+        string: The IP address
+    """
     
     ap_if = network.WLAN(network.AP_IF)
     ap_if.active(False)
@@ -23,4 +26,4 @@ def connect(ssid, password, hostname):
         while not sta_if.isconnected():
             sleep_ms(100)
 
-    print('network config:', sta_if.ifconfig())
+    return sta_if.ifconfig()[0]

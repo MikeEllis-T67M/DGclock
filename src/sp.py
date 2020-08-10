@@ -5,6 +5,7 @@ import pulseclock
 i2c = I2C(0, scl=22, sda=21)
 ds = ds3231.DS3231(i2c)
 rtc = RTC()
+ds.alarm1_tm
 
 pc = pulseclock.Pulseclock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 200, 200, False)
 
@@ -33,5 +34,8 @@ ds.rtc_tm, rtc.now()
 # Does the display work and sub-classing work as I expect?
 import ttgodisplay
 
-oled = ttgodisplay.TTGO()
-oled.text_centred("Some simple text", 90)
+tft = display.TFT() 
+tft.init(tft.ST7789,bgr=False,rot=tft.LANDSCAPE, miso=17,backl_pin=4,backl_on=1, mosi=19, clk=18, cs=5, dc=16)
+tft.setwin(40,52,320,240)
+
+text_centred("Some simple text", 90)
