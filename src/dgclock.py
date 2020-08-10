@@ -85,10 +85,10 @@ def dgclock():
                 if not recent_sync: # Needed to avoid multiple sync attempts within a single second
                     recent_sync = True
                     if rtc.synced():
-                        print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now()))
+                        print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
                         ds.rtc_tm = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
                     else:
-                        print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now()))
+                        print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
                         rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
             else:
                 recent_sync = False
