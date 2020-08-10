@@ -1,4 +1,4 @@
-from machine import I2C, Pin, RTC, display
+from machine import I2C, Pin, RTC
 from utime import sleep_ms, time
 import ujson
 
@@ -17,8 +17,8 @@ def dgclock():
         print("Hands position: {}".format(ds.alarm1_tm))
 
         # Connect to the WiFi 
-        wifi_settings = load_settings("wifi.json")
-        connect(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
+        wifi_settings = settings.load_settings("wifi.json")
+        wifi.connect(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
 
         # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
         rtc = RTC()
