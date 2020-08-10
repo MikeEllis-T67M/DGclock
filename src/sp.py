@@ -29,3 +29,9 @@ ds.rtc_tm = rtc.now()
 
 # Compare RTC and DS
 ds.rtc_tm, rtc.now()
+
+# Does the display work and sub-classing work as I expect?
+import ttgodisplay
+
+oled = ttgodisplay.TTGO()
+oled.text_centred("Some simple text", 90)

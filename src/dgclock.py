@@ -33,7 +33,7 @@ def dgclock():
         display       = hand_position[3] * 3600 + hand_position[4] * 60 + hand_position[5]  % 43200
 
         # Initialise the pulse clock itself - pulses of 200/100 seem reliable
-        pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 250, 150, invert)
+        pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 300, 50, invert)
 
         while True:
             # Convert current time to seconds since 00:00:00 (12-hour clock mode)
