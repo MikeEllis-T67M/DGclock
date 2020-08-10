@@ -73,7 +73,7 @@ def dgclock():
                 # Update the stored hand position
                 display           = (display + 1) % 43200
                 new_hand_position = (0, 0, 0, (display // 3600), (display // 60) % 60, display % 60, 0, 0) 
-                print("Hands moved to {}".format(new_hand_position))
+                #print("Hands moved to {}".format(new_hand_position))  # DEBUG
                 ds.alarm1_tm      = new_hand_position
 
                 # Move the clock - note that there is a potential race condition here
