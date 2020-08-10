@@ -1,4 +1,5 @@
 import network
+from utime import sleep_ms
 
 def connect(ssid, password, hostname):
     """ Connect to a WiFI Access Point and obtain a DHCP address
