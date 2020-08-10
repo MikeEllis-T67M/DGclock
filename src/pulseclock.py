@@ -22,9 +22,7 @@ class PulseClock:
         self.pulse_time = pulse_time
         self.dwell_time = dwell_time
         self.invert     = invert
-        self.pin_enable.value(0)
-        self.pin_plus.value(0)  
-        self.pin_minus.value(0) 
+        self.step() # Ensure the mechanism is fully aligned not in some midway state
 
     def __repr__(self):
         """Returns representation of the object
