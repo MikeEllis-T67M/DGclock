@@ -55,7 +55,7 @@ def dgclock():
 
         # Read the NV stored hand position
         hand_position = ds.alarm1_tm
-        invert        = hand_position[5] % 2 == 1 # Is the second hand pointing to an even or odd number?
+        invert        = hand_position[5] % 2 == 0 # Is the second hand pointing to an even or odd number?
         display       = hand_position[3] * 3600 + hand_position[4] * 60 + hand_position[5]  % 43200
 
         # Initialise the pulse clock itself - pulses of 200/100 seem reliable
