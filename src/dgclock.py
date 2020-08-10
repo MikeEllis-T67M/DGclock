@@ -19,14 +19,14 @@ def text_centred(tft, text, vpos):
     tft.text(120 - int(tft.textWidth(text)/2), vpos - int(tft.fontSize()[1]/2), text)
 
 def dgclock():
-    try:
-        # Initialise the display
-        tft = display.TFT() 
-        tft.init(tft.ST7789,bgr=False,rot=tft.LANDSCAPE, miso=17,backl_pin=4,backl_on=1, mosi=19, clk=18, cs=5, dc=16,splash = False)
-        tft.setwin(40,52,320,240)
-        tft.font(tft.FONT_Comic) # It's big and easy to read...
-        text_centred(tft, "DG Clock", 8)
+    # Initialise the display
+    tft = display.TFT() 
+    tft.init(tft.ST7789,bgr=False,rot=tft.LANDSCAPE, miso=17,backl_pin=4,backl_on=1, mosi=19, clk=18, cs=5, dc=16,splash = False)
+    tft.setwin(40,52,320,240)
+    tft.font(tft.FONT_Comic) # It's big and easy to read...
+    text_centred(tft, "DG Clock", 8)
 
+    try:
         # Initialise the DS3231 battery-backed RTC
         i2c = I2C(0, scl=22, sda=21)
         ds  = ds3231.DS3231(i2c)
@@ -91,7 +91,7 @@ def dgclock():
                         rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
             else:
                 recent_sync = False
-    finally:
+    except KeyboardInterrupt:
         # Try to relinquish the I2C bus
         i2c.deinit()
         # del i2c
