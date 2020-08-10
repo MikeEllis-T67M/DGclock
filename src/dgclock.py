@@ -22,10 +22,10 @@ def dgclock():
     try:
         # Initialise the display
         tft = display.TFT() 
-        tft.init(tft.ST7789,bgr=False,rot=tft.LANDSCAPE, miso=17,backl_pin=4,backl_on=1, mosi=19, clk=18, cs=5, dc=16)
+        tft.init(tft.ST7789,bgr=False,rot=tft.LANDSCAPE, miso=17,backl_pin=4,backl_on=1, mosi=19, clk=18, cs=5, dc=16,splash = False)
         tft.setwin(40,52,320,240)
         tft.font(tft.FONT_Comic) # It's big and easy to read...
-        text.centred(tft, "DG Clock", 8)
+        text_centred(tft, "DG Clock", 8)
 
         # Initialise the DS3231 battery-backed RTC
         i2c = I2C(0, scl=22, sda=21)
@@ -37,7 +37,7 @@ def dgclock():
         # Connect to the WiFi 
         wifi_settings = settings.load_settings("wifi.json")
         ip_addr       = wifi.connect(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
-        text.centred(tft, "{}".format(ip_addr), 20)
+        text_centred(tft, "{}".format(ip_addr), 20)
 
         # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
         rtc = RTC()
