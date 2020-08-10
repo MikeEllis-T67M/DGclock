@@ -35,7 +35,7 @@ def dgclock():
     # Connect to the WiFi 
     wifi_settings = settings.load_settings("wifi.json")
     ip_addr       = wifi.connect(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
-    text_centred(tft, "{}".format(ip_addr), 20)
+    text_centred(tft, "{}".format(ip_addr), 40)
 
     # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
     rtc = RTC()
@@ -64,7 +64,7 @@ def dgclock():
             if diff > 0 or diff < -7200: # If the difference is less than two hours, it's quicker just to stop the clock
                 # Update the stored hand position
                 hands             = (hands + 1) % 43200
-                new_hand_position = (0, 0, 0, (display // 3600), (display // 60) % 60, display % 60, 0, 0) 
+                new_hand_position = (0, 0, 0, (hands // 3600), (hands // 60) % 60, hands % 60, 0, 0) 
                 if new_hand_position[6] > 0:
                     print("Hands moved to {}".format(new_hand_position))  # DEBUG
                 ds.alarm1_tm      = new_hand_position
@@ -73,8 +73,8 @@ def dgclock():
                 pc.step()
 
                 # Update the display
-                text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(current_time[3],      current_time[4],      current_time[5]),      32)
-                text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(new_hand_position[3], new_hand_position[4], new_hand_position[5]), 32)
+                text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(current_time[3],      current_time[4],      current_time[5]),      60)
+                text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(new_hand_position[3], new_hand_position[4], new_hand_position[5]), 80)
             else:
                 sleep_ms(100)
 
