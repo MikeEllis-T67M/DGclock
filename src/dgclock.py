@@ -19,41 +19,40 @@ def text_centred(tft, text, vpos):
     tft.text(120 - int(tft.textWidth(text)/2), vpos - int(tft.fontSize()[1]/2), text)
 
 def dgclock():
+    # Initialise the DS3231 battery-backed RTC
+    i2c = I2C(0, scl=22, sda=21)
+    ds  = ds3231.DS3231(i2c)
+    print("DS3231 time   : {}".format(ds.rtc_tm))
+    print("Hands position: {}".format(ds.alarm1_tm))
+
+    # Connect to the WiFi 
+    wifi_settings = settings.load_settings("wifi.json")
+    ip_addr       = wifi.connect(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
+
+    # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
+    rtc = RTC()
+    rtc.init(ds.rtc_tm)
+    print("RTC set to    : {}".format(rtc.now()))
+    rtc.ntp_sync("pool.ntp.org", update_period = 900)
+    recent_sync = False
+
+    # Read the NV stored hand position
+    hand_position = ds.alarm1_tm
+    invert        = hand_position[5] % 2 == 0 # Is the second hand pointing to an even or odd number?
+    display       = hand_position[3] * 3600 + hand_position[4] * 60 + hand_position[5]  % 43200
+
+    # Initialise the pulse clock itself - pulses of 200/100 seem reliable
+    pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 300, 50, invert)
+
     # Initialise the display
     tft = display.TFT() 
     tft.init(tft.ST7789,bgr=False,rot=tft.LANDSCAPE, miso=17,backl_pin=4,backl_on=1, mosi=19, clk=18, cs=5, dc=16,splash = False)
     tft.setwin(40,52,320,240)
     tft.font(tft.FONT_Comic) # It's big and easy to read...
     text_centred(tft, "DG Clock", 8)
+    text_centred(tft, "{}".format(ip_addr), 20)
 
     try:
-        # Initialise the DS3231 battery-backed RTC
-        i2c = I2C(0, scl=22, sda=21)
-        ds  = ds3231.DS3231(i2c)
-
-        print("DS3231 time   : {}".format(ds.rtc_tm))
-        print("Hands position: {}".format(ds.alarm1_tm))
-
-        # Connect to the WiFi 
-        wifi_settings = settings.load_settings("wifi.json")
-        ip_addr       = wifi.connect(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
-        text_centred(tft, "{}".format(ip_addr), 20)
-
-        # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
-        rtc = RTC()
-        rtc.init(ds.rtc_tm)
-        print("RTC set to    : {}".format(rtc.now()))
-        rtc.ntp_sync("pool.ntp.org", update_period = 900)
-        recent_sync = False
-
-        # Read the NV stored hand position
-        hand_position = ds.alarm1_tm
-        invert        = hand_position[5] % 2 == 0 # Is the second hand pointing to an even or odd number?
-        display       = hand_position[3] * 3600 + hand_position[4] * 60 + hand_position[5]  % 43200
-
-        # Initialise the pulse clock itself - pulses of 200/100 seem reliable
-        pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 300, 50, invert)
-
         while True:
             # Convert current time to seconds since 00:00:00 (12-hour clock mode)
             current_time = rtc.now()
