@@ -73,7 +73,8 @@ def dgclock():
                 # Move the clock - note that there is a potential race condition here
                 pc.step()
 
-                text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(current_time[3], current_time[4], current_time[5], 32)
+                # Update the display
+                text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(current_time[3],      current_time[4],      current_time[5]),      32)
                 text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(new_hand_position[3], new_hand_position[4], new_hand_position[5]), 32)
             else:
                 sleep_ms(100)
