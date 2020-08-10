@@ -237,4 +237,4 @@ class DS3231:
         """
         print("Before {}".format(time_to_set))
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 7, DS3231.tm2dsal1(time_to_set))
-        print("After  {} ({})".format(time_to_set), self.alarm1_tm)
+        print("After  {} ({})".format(time_to_set, self.alarm1_tm))
