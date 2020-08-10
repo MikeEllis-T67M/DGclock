@@ -19,6 +19,13 @@ def text_centred(tft, text, vpos):
     tft.text(120 - int(tft.textWidth(text)/2), vpos - int(tft.fontSize()[1]/2), text)
 
 def dgclock():
+    # Initialise the display
+    tft = display.TFT() 
+    tft.init(tft.ST7789,bgr=False,rot=tft.LANDSCAPE, miso=17,backl_pin=4,backl_on=1, mosi=19, clk=18, cs=5, dc=16,splash = False)
+    tft.setwin(40,52,320,240)
+    tft.font(tft.FONT_Comic) # It's big and easy to read...
+    text_centred(tft, "DG Clock", 8)
+
     # Initialise the DS3231 battery-backed RTC
     i2c = I2C(0, scl=22, sda=21)
     ds  = ds3231.DS3231(i2c)
@@ -28,6 +35,7 @@ def dgclock():
     # Connect to the WiFi 
     wifi_settings = settings.load_settings("wifi.json")
     ip_addr       = wifi.connect(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
+    text_centred(tft, "{}".format(ip_addr), 20)
 
     # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
     rtc = RTC()
@@ -39,18 +47,10 @@ def dgclock():
     # Read the NV stored hand position
     hand_position = ds.alarm1_tm
     invert        = hand_position[5] % 2 == 0 # Is the second hand pointing to an even or odd number?
-    display       = hand_position[3] * 3600 + hand_position[4] * 60 + hand_position[5]  % 43200
+    hands         = hand_position[3] * 3600 + hand_position[4] * 60 + hand_position[5]  % 43200
 
     # Initialise the pulse clock itself - pulses of 200/100 seem reliable
     pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 300, 50, invert)
-
-    # Initialise the display
-    tft = display.TFT() 
-    tft.init(tft.ST7789,bgr=False,rot=tft.LANDSCAPE, miso=17,backl_pin=4,backl_on=1, mosi=19, clk=18, cs=5, dc=16,splash = False)
-    tft.setwin(40,52,320,240)
-    tft.font(tft.FONT_Comic) # It's big and easy to read...
-    text_centred(tft, "DG Clock", 8)
-    text_centred(tft, "{}".format(ip_addr), 20)
 
     try:
         while True:
@@ -59,11 +59,11 @@ def dgclock():
             current = (current_time[3]  * 3600 + current_time[4]  * 60 + current_time[5]) % 43200
 
             # How far apart are the hands - allowing for wrap-around
-            diff = current - display 
+            diff = current - hands 
             #print("Time:{} Hands:{} Delta:{}".format(current, display, diff))  # DEBUG
             if diff > 0 or diff < -7200: # If the difference is less than two hours, it's quicker just to stop the clock
                 # Update the stored hand position
-                display           = (display + 1) % 43200
+                hands             = (hands + 1) % 43200
                 new_hand_position = (0, 0, 0, (display // 3600), (display // 60) % 60, display % 60, 0, 0) 
                 if new_hand_position[6] > 0:
                     print("Hands moved to {}".format(new_hand_position))  # DEBUG
