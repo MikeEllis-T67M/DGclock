@@ -42,8 +42,9 @@ class PulseClock:
         self.invert = True              # Flip the internal state here as there is this reduces any race condition
         sleep_ms(self.pulse_time)
 
-        self.pin_minus.value(1)         # Actively stop (short out) the motor for the "dwell" duration
-        sleep_ms(self.dwell_time)
+        if self.dwell_time > 0:
+            self.pin_minus.value(1)         # Actively stop (short out) the motor for the "dwell" duration
+            sleep_ms(self.dwell_time)
 
         self.pin_enable.value(0)        # Disable the driver ready for the next pulse
 
@@ -61,8 +62,10 @@ class PulseClock:
         self.invert = False             # Flip the internal state here as there is this reduces any race condition
         sleep_ms(self.pulse_time)
 
-        self.pin_plus.value(1)         # Actively stop (short out) the motor for the "dwell" duration
-        sleep_ms(self.dwell_time)
+        if self.dwell_time > 0:
+            self.pin_plus.value(1)         # Actively stop (short out) the motor for the "dwell" duration
+            sleep_ms(self.dwell_time)
+
         self.pin_enable.value(0)        # Disable the driver ready for the next pulse    
 
     def step(self):

@@ -50,7 +50,7 @@ def dgclock():
     hands         = hand_position[3] * 3600 + hand_position[4] * 60 + hand_position[5]  % 43200
 
     # Initialise the pulse clock itself - pulses of 200/100 seem reliable
-    pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 300, 50, invert)
+    pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 300, 0, invert)
 
     try:
         while True:
@@ -76,21 +76,25 @@ def dgclock():
                 text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(current_time[3],      current_time[4],      current_time[5]),      60)
                 text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(new_hand_position[3], new_hand_position[4], new_hand_position[5]), 80)
             else:
-                sleep_ms(100)
+                sleep_ms(100) # A little bit of idle time for background threads to run in - but not too much so that the hand movement looks jerky
 
             # Re-sync the clocks every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
-            if (current % 900) == 62:  
-                if not recent_sync: # Needed to avoid multiple sync attempts within a single second
-                    recent_sync = True
-                    if rtc.synced():
-                        print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
-                        ds.rtc_tm = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
-                    else:
-                        print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
-                        rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
+            if rtc.synced():
+                text_centred(tft, "NTP Sync OK", 100)
+                if (current % 900) == 62 and not recent_sync:  
+                    print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
+                    ds.rtc_tm   = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
+                    recent_sync = True      # Only sync once every 15 minutes, not once per loop
             else:
+                text_centred(tft, "No NTP sync", 100)
+                if (current % 900) == 62:  
+                    print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
+                    rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
+            
+            if (current % 900) == 63: # Reset the recent_sync flag when the next second arrives
                 recent_sync = False
-    except KeyboardInterrupt:
+
+        except KeyboardInterrupt:
         # Try to relinquish the I2C bus
         i2c.deinit()
         # del i2c
