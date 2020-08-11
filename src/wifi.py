@@ -26,5 +26,7 @@ def connect_sta(ssid, password, hostname):
 
 def setup_ap(ssid, password, hostname):
     ap_if = network.WLAN(network.AP_IF)
+    ap_if.active(True)
+    sleep_ms(100)
     ap_if.config(essid = ssid, authmode = network.AUTH_WPA2_PSK, password = password)
     return ap_if.ifconfig()
