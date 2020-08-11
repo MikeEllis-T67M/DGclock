@@ -94,7 +94,7 @@ def dgclock():
             if (current % 900) == 63: # Reset the recent_sync flag when the next second arrives
                 recent_sync = False
 
-        except KeyboardInterrupt:
+    except KeyboardInterrupt:
         # Try to relinquish the I2C bus
         i2c.deinit()
         # del i2c
