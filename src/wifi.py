@@ -1,7 +1,7 @@
 import network
 from utime import sleep_ms
 
-def connect(ssid, password, hostname):
+def connect_sta(ssid, password, hostname):
     """ Connect to a WiFI Access Point and obtain a DHCP address
 
     Args:
@@ -11,11 +11,7 @@ def connect(ssid, password, hostname):
     
     Returns:
         string: The IP address
-    """
-    
-    ap_if = network.WLAN(network.AP_IF)
-    ap_if.active(False)
-    
+    """   
     sta_if = network.WLAN(network.STA_IF)
     if not sta_if.isconnected():
         print('connecting to network...')
@@ -27,3 +23,8 @@ def connect(ssid, password, hostname):
             sleep_ms(100)
 
     return sta_if.ifconfig()[0]
+
+def setup_ap(ssid, password, hostname):
+    ap_if = network.WLAN(network.AP_IF)
+    ap_if.config(essid = ssid, authmode = network.AUTH_WPA2_PSK, password = password)
+    return ap_if.ifconfig()

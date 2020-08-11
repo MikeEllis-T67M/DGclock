@@ -34,8 +34,8 @@ def dgclock():
 
     # Connect to the WiFi 
     wifi_settings = settings.load_settings("wifi.json")
-    ip_addr       = wifi.connect(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
-    text_centred(tft, "{}".format(ip_addr), 40)
+    ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
+    text_centred(tft, "{}".format(ip_addr), 38)
 
     # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
     rtc = RTC()
@@ -74,19 +74,19 @@ def dgclock():
 
                 # Update the display
                 text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(current_time[3],      current_time[4],      current_time[5]),      60)
-                text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(new_hand_position[3], new_hand_position[4], new_hand_position[5]), 80)
+                text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(new_hand_position[3], new_hand_position[4], new_hand_position[5]), 82)
             else:
                 sleep_ms(100) # A little bit of idle time for background threads to run in - but not too much so that the hand movement looks jerky
 
             # Re-sync the clocks every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
             if rtc.synced():
-                text_centred(tft, "NTP Sync OK", 100)
+                text_centred(tft, "NTP Sync OK", 104)
                 if (current % 900) == 62 and not recent_sync:  
                     print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
                     ds.rtc_tm   = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
                     recent_sync = True      # Only sync once every 15 minutes, not once per loop
             else:
-                text_centred(tft, "No NTP sync", 100)
+                text_centred(tft, "No NTP sync", 104)
                 if (current % 900) == 62:  
                     print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
                     rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
