@@ -159,7 +159,7 @@ def dggui():
     srv = MicroWebSrv(webPath='/flash/www')
     srv.MaxWebSocketRecvLen     = 256
     srv.AcceptWebSocketCallback = _acceptWebSocketCallback
-    srv.Start(threaded = True)
+    srv.Start(threaded = False)
 
     try:
         while True:

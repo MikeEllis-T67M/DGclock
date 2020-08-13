@@ -126,6 +126,6 @@ srv = MicroWebSrv(webPath='/flash/www')
 srv.MaxWebSocketRecvLen     = 256
 srv.WebSocketThreaded		= False
 srv.AcceptWebSocketCallback = _acceptWebSocketCallback
-srv.Start(threaded = srv.WebSocketThreaded)
+srv.Start(threaded = True)
 
 # ----------------------------------------------------------------------------
