@@ -107,11 +107,6 @@ def _closedCallback(webSocket) :
 
 # ----------------------------------------------------------------------------
 
-#routeHandlers = [
-#	( "/test",	"GET",	_httpHandlerTestGet ),
-#	( "/test",	"POST",	_httpHandlerTestPost )
-#]
-
 # Connect to the WiFi 
 import settings
 import wifi
@@ -119,10 +114,17 @@ import wifi
 wifi_settings = settings.load_settings("wifi.json")
 ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
 
-srv = MicroWebSrv(webPath='www/')
+# Looks like this was replaced by the @Microwebsrv.route decorator
+#
+#routeHandlers = [
+#	( "/test",	"GET",	_httpHandlerTestGet ),
+#	( "/test",	"POST",	_httpHandlerTestPost )
+#]
+
+srv = MicroWebSrv(webPath='/flash/www/')
 srv.MaxWebSocketRecvLen     = 256
 srv.WebSocketThreaded		= False
 srv.AcceptWebSocketCallback = _acceptWebSocketCallback
-srv.Start()
+srv.Start(threaded = srv.WebSocketThreaded)
 
 # ----------------------------------------------------------------------------
