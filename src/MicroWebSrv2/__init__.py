@@ -12,7 +12,7 @@ print('       -     by JC`zic & HC2     -')
 print('       ---------------------------')
 print()
 
-from .libs.XAsyncSockets import *
-from .libs.urlUtils 	 import *
-from .webRoute     		 import *
-from .microWebSrv2 		 import *
+#from .libs.XAsyncSockets import *
+#from .libs.urlUtils 	 import *
+#from .webRoute     		 import *
+#from .microWebSrv2 		 import *
