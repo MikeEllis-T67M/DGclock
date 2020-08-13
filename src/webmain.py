@@ -113,6 +113,7 @@ import wifi
 
 wifi_settings = settings.load_settings("wifi.json")
 ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
+print("Got IP address {}".format(ip_addr))
 
 # Looks like this was replaced by the @Microwebsrv.route decorator
 #
@@ -121,7 +122,7 @@ ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'
 #	( "/test",	"POST",	_httpHandlerTestPost )
 #]
 
-srv = MicroWebSrv(webPath='/flash/www/')
+srv = MicroWebSrv(webPath='/flash/www')
 srv.MaxWebSocketRecvLen     = 256
 srv.WebSocketThreaded		= False
 srv.AcceptWebSocketCallback = _acceptWebSocketCallback
