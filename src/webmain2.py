@@ -1,6 +1,12 @@
 
 
-from MicroWebSrv2  import *
+#from MicroWebSrv2  import *
+import MicroWebSrv2.libs.urlUtils
+import MicroWebSrv2.libs.XAsyncSockets
+import MicroWebSrv2.webRoute
+import MicroWebSrv2.microWebSrv2
+import MicroWebSrv2.httpRequest
+import MicroWebSrv2.httpResponse
 from time          import sleep
 from _thread       import allocate_lock
 
