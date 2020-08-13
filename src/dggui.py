@@ -156,11 +156,10 @@ def dggui():
     #]
 
     # Initialise the demo website
-    srv = MicroWebSrv(webPath='www/')
+    srv = MicroWebSrv(webPath='/flash/www')
     srv.MaxWebSocketRecvLen     = 256
-    srv.WebSocketThreaded		= False
     srv.AcceptWebSocketCallback = _acceptWebSocketCallback
-    srv.Start()
+    srv.Start(threaded = False)
 
     try:
         while True:
