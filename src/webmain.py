@@ -113,6 +113,9 @@ def _closedCallback(webSocket) :
 #]
 
 # Connect to the WiFi 
+import settings
+import wifi
+
 wifi_settings = settings.load_settings("wifi.json")
 ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
 
