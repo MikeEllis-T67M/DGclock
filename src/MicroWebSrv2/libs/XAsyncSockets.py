@@ -4,7 +4,7 @@ Copyright © 2019 Jean-Christophe Bos & HC² (www.hc2.fr)
 """
 
 
-from   _thread  import allocate_lock, start_new_thread
+from   _thread  import lock as allocate_lock, start_new_thread
 from   time     import sleep
 from   select   import select
 import socket
