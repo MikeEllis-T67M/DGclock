@@ -38,7 +38,8 @@ def update_clock(pc, ds, rtc, tft):
 
     Returns:
         True is the clock was stepped, otherwise False
-    """    
+    """  
+    print("update_clock")  
     current_time = rtc.now()
     current = (current_time[3]  * 3600 + current_time[4]  * 60 + current_time[5]) % 43200
 
@@ -63,6 +64,7 @@ def update_clock(pc, ds, rtc, tft):
     return True
 
 def align_clocks(rtc, ds, tft):
+    print("align_clocks")
     if rtc.synced():
         # Always tell the user that the network time is OK
         text_centred(tft, "NTP Sync OK", 104)
