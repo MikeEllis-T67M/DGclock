@@ -29,60 +29,40 @@ class PulseClock:
         """
         return "{}({!r})".format(self.__class__.__name__, self.pin_plus, self.pin_minus, self.pin_enable, self.pulse_time, self.dwell_time, self.invert)
 
-    def _step_even(self):
-        """ Step the clock forward one even second (0-1, 2-3, 4-5 etc)
+    def _step(self, ld, tr, en):
+        """ Step the clock forward one second
+
+        Args:
+            ld (pin): Leading pin
+            tr (pin): Trailing pin
+            en (pin): Enable pin
+        """        """ 
         """   
-        print("+", end="")     
-        self.pin_enable.value(0)        # Ensure the motor is disabled
+        en.value(0)                 # Ensure the motor is disabled
+        ld.value(1)                 # Set up the pulse
+        tr.value(0)
 
-        self.pin_plus.value(1)          # Set up an "even" pulse
-        self.pin_minus.value(0)
-
-        self.pin_enable.value(1)        # Enable the motor for the "pulse" duration
-        self.invert = True              # Flip the internal state here as there is this reduces any race condition
+        en.value(1)                 # Enable the motor for the "pulse" duration
+        self.invert = True          # Flip the internal state here as there is this reduces any race condition
         sleep_ms(self.pulse_time)
 
-        self.pin_minus.value(1)         # Actively stop (short out) the motor for the "dwell" duration
 
         if self.dwell_time > 0:
             print(".", end="")
+            tr.value(1)             # Actively stop (short out) the motor for the "dwell" duration
             sleep_ms(self.dwell_time)
 
         if self.dwell_time > -1:
             print("0", end="")
-            self.pin_enable.value(0)        # Disable the driver ready for the next pulse
+            en.value(0)             # Disable the driver ready for the next pulse
 
-        print("")
-
-    def _step_odd(self):
-        """ Step the clock forward one off second (1-2, 3-4, 5-6 etc)
-        """
-        print("-", end="")
-        self.pin_enable.value(0)        # Ensure the motor is disabled
-
-        self.pin_plus.value(0)          # Set up an "even" pulse
-        self.pin_minus.value(1)
-
-        self.pin_enable.value(1)        # Enable the motor for the "pulse" duration
-        self.invert = False             # Flip the internal state here as there is this reduces any race condition
-        sleep_ms(self.pulse_time)
-
-        self.pin_plus.value(1)         # Actively stop (short out) the motor for the "dwell" duration
-
-        if self.dwell_time > 0:
-            print(".", end="")
-            sleep_ms(self.dwell_time)
-
-        if self.dwell_time > -1:
-            print("0", end="")
-            self.pin_enable.value(0)        # Disable the driver ready for the next pulse    
-
+        tr.value(1)                 # Make sure we're ready for the next step
         print("")
 
     def step(self):
         """ Step the clock forward by one second
         """
         if self.invert:
-            self._step_odd()
+            self._step(self.pin_minus, self.pin_plus, self.pin_enable)
         else:
-            self._step_even()
+            self._step(self.pin_plus, self.pin_minus, self.pin_enable)
