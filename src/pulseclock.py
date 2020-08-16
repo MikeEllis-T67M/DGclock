@@ -54,7 +54,7 @@ class PulseClock:
         if self.dwell_time > -1:
             en.value(0)                # Disable the driver ready for the next pulse
 
-        tr.value(1)                    # Make sure we're ready for the next step
+        #tr.value(1)                    # Make sure we're ready for the next step
         
     def step(self):
         """ Step the clock forward by one second
