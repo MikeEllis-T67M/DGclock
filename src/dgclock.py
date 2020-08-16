@@ -63,12 +63,15 @@ def update_clock(pc, ds, rtc, tft, hands):
 
 def align_clocks(rtc, ds, tft, last_sync):
     print("align_clocks")
+
+    now = time.mktime(rtc.now()) #  Get the current time as seconds from epoch
+
     if rtc.synced():
         # Always tell the user that the network time is OK
         text_centred(tft, "NTP Sync OK", 104)
 
         # Set the DS from the RTC when NTP OK - but only every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
-        if rtc.now() > last_sync + 900:  
+        if now > last_sync + 900:  
             print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
             ds.rtc_tm   = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
             last_sync   = rtc.now() # Remember when we last synced
@@ -77,10 +80,10 @@ def align_clocks(rtc, ds, tft, last_sync):
         text_centred(tft, "No NTP sync", 104)
 
         # Re-sync the RTC from the DS when NTP failed every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
-        if rtc.now() > last_sync + 900:  
+        if now > last_sync + 900:  
             print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
             rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
-            last_sync   = rtc.now() # Remember when we last synced
+            last_sync   = now # Remember when we last synced
 
     return last_sync
 
