@@ -18,13 +18,18 @@ def text_centred(tft, text, vpos):
     """    
     tft.text(120 - int(tft.textWidth(text)/2), vpos - int(tft.fontSize()[1]/2), text)
 
-def dgclock():
+def init_display():
     # Initialise the display
     tft = display.TFT() 
-    tft.init(tft.ST7789,bgr=False,rot=tft.LANDSCAPE, miso=17,backl_pin=4,backl_on=1, mosi=19, clk=18, cs=5, dc=16,splash = False)
+    tft.init(tft.ST7789, bgr=False, rot=tft.LANDSCAPE, miso=17, backl_pin=4, backl_on=1, mosi=19, clk=18, cs=5, dc=16, splash = False)
     tft.setwin(40,52,320,240)
     tft.font(tft.FONT_Comic) # It's big and easy to read...
     text_centred(tft, "DG Clock", 8)
+    return tft
+        
+def dgclock():
+    # Intialised the display
+    tft = init_display()
 
     # Initialise the DS3231 battery-backed RTC
     i2c = I2C(0, scl=22, sda=21)
@@ -66,13 +71,10 @@ def dgclock():
 
             # How far apart are the hands - allowing for wrap-around
             diff = current - hands 
-            #print("Time:{} Hands:{} Delta:{}".format(current, display, diff))  # DEBUG
             if diff > 0 or diff < -7200: # If the difference is less than two hours, it's quicker just to stop the clock
                 # Update the stored hand position
                 hands             = (hands + 1) % 43200
                 new_hand_position = (0, 0, 0, (hands // 3600), (hands // 60) % 60, hands % 60, 0, 0) 
-                if new_hand_position[6] > 0:
-                    print("Hands moved to {}".format(new_hand_position))  # DEBUG
                 ds.alarm1_tm      = new_hand_position
 
                 # Move the clock - note that there is a potential race condition here
@@ -84,20 +86,25 @@ def dgclock():
             else:
                 sleep_ms(100) # A little bit of idle time for background threads to run in - but not too much so that the hand movement looks jerky
 
-            # Re-sync the clocks every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
             if rtc.synced():
+                # Always tell the user that the network time is OK
                 text_centred(tft, "NTP Sync OK", 104)
-                if (current % 900) == 62 and not recent_sync:  
+
+                # Re-sync the DS from the RTC when NTP OK - but only every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
+                if not recent_sync:  
                     print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
                     ds.rtc_tm   = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
                     recent_sync = True      # Only sync once every 15 minutes, not once per loop
             else:
+                # Always tell the user that the network time has failed
                 text_centred(tft, "No NTP sync", 104)
+
+                # Re-sync the RTC from the DS when NTP failed every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
                 if (current % 900) == 62:  
                     print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
                     rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
 
-            if (current % 900) == 63: # Reset the recent_sync flag when the next second arrives
+            if (current % 900) == 62: # Reset the recent_sync flag when the next second arrives
                 recent_sync = False
 
     except KeyboardInterrupt:
