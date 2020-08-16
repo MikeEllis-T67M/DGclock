@@ -48,12 +48,10 @@ class PulseClock:
 
 
         if self.dwell_time > 0:
-            print(".", end="")
             tr.value(1)             # Actively stop (short out) the motor for the "dwell" duration
             sleep_ms(self.dwell_time)
 
         if self.dwell_time > -1:
-            print("0", end="")
             en.value(0)             # Disable the driver ready for the next pulse
 
         tr.value(1)                 # Make sure we're ready for the next step
