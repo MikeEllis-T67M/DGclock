@@ -90,7 +90,7 @@ def dgclock():
                 if (current % 900) == 62:  
                     print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
                     rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
-            
+                                
             if (current % 900) == 63: # Reset the recent_sync flag when the next second arrives
                 recent_sync = False
 
