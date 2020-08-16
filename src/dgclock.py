@@ -11,6 +11,7 @@ import wifi
 hands     = 0 # The current hand position
 tft       = 0 # The TFT display
 ds        = 0 # The DS3231 RTC chip
+rtc       = 0 # The system RTC
 pc        = 0 # The actual pulse clock mechanism
 last_sync = 0 # The time the clocks were last synced
 
@@ -127,7 +128,7 @@ def dgclock():
                 sleep_ms(100) # A little bit of idle time for background threads to run in - but not too much so that the hand movement looks jerky
 
             align_clocks()
-            
+
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus
         print("Hand position: {}".format(ds.alarm1_tm))
