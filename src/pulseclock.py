@@ -65,11 +65,11 @@ class PulseClock:
         sleep_ms(self.pulse_time)
 
         self.pin_plus.value(1)         # Actively stop (short out) the motor for the "dwell" duration
-        
+
         if self.dwell_time > 0:
             sleep_ms(self.dwell_time)
 
-        if self.swell_time > -1:
+        if self.dwell_time > -1:
             self.pin_enable.value(0)        # Disable the driver ready for the next pulse    
 
     def step(self):
