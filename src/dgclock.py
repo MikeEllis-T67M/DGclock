@@ -50,7 +50,13 @@ def dgclock():
     hands         = hand_position[3] * 3600 + hand_position[4] * 60 + hand_position[5]  % 43200
 
     # Initialise the pulse clock itself - pulses of 200/100 seem reliable
-    pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 400, -1, invert)
+    clock_settings = settings.load_settings("clock.json")
+    pc = pulseclock.PulseClock(Pin(clock_settings['Plus'],   Pin.OUT), 
+                               Pin(clock_settings['Minus'],  Pin.OUT), 
+                               Pin(clock_settings['Enable'], Pin.OUT), 
+                               clock_settings['Pulse'],
+                               clock_settings['Dwell'], 
+                               invert)
 
     try:
         while True:
