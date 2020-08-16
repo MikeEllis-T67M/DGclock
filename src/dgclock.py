@@ -11,7 +11,6 @@ import wifi
 hands     = 0 # The current hand position
 tft       = 0 # The TFT display
 ds        = 0 # The DS3231 RTC chip
-rtc       = 0 # The system RTC
 pc        = 0 # The actual pulse clock mechanism
 last_sync = 0 # The time the clocks were last synced
 
@@ -66,7 +65,7 @@ def update_clock(pc):
 
     return True
 
-def align_clocks():
+def align_clocks(rtc, ds):
     if rtc.synced():
         # Always tell the user that the network time is OK
         text_centred(tft, "NTP Sync OK", 104)
@@ -127,7 +126,7 @@ def dgclock():
             if not update_clock:
                 sleep_ms(100) # A little bit of idle time for background threads to run in - but not too much so that the hand movement looks jerky
 
-            align_clocks()
+            align_clocks(rtc, ds)
 
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus
