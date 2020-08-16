@@ -10,7 +10,7 @@ class PulseClock:
             drive_minus  (Pin):     The pin used to drive the motor "-ve" terminal
             drive_enable (Pin):     The pin used to enable the motor driver
             pulse_time   (number):  The duration of the pulse to step in milliseconds
-            dwell_time   (number):  The duration of the dwell time after a step in milliseconds
+            dwell_time   (number):  The duration of the dwell time after a step in milliseconds. 0 = no dwell, -1 = no power-save
             invert       (boolean): Should the next pulse by inverted (True/False). 
             
         Notes:
@@ -42,11 +42,13 @@ class PulseClock:
         self.invert = True              # Flip the internal state here as there is this reduces any race condition
         sleep_ms(self.pulse_time)
 
+        self.pin_minus.value(1)         # Actively stop (short out) the motor for the "dwell" duration
+
         if self.dwell_time > 0:
-            self.pin_minus.value(1)         # Actively stop (short out) the motor for the "dwell" duration
             sleep_ms(self.dwell_time)
 
-        self.pin_enable.value(0)        # Disable the driver ready for the next pulse
+        if self.dwell_time > -1:
+            self.pin_enable.value(0)        # Disable the driver ready for the next pulse
 
 
     def _step_odd(self):
@@ -62,11 +64,13 @@ class PulseClock:
         self.invert = False             # Flip the internal state here as there is this reduces any race condition
         sleep_ms(self.pulse_time)
 
+        self.pin_plus.value(1)         # Actively stop (short out) the motor for the "dwell" duration
+        
         if self.dwell_time > 0:
-            self.pin_plus.value(1)         # Actively stop (short out) the motor for the "dwell" duration
             sleep_ms(self.dwell_time)
 
-        self.pin_enable.value(0)        # Disable the driver ready for the next pulse    
+        if self.swell_time > -1:
+            self.pin_enable.value(0)        # Disable the driver ready for the next pulse    
 
     def step(self):
         """ Step the clock forward by one second
