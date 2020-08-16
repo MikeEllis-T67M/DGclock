@@ -29,7 +29,7 @@ class PulseClock:
         """
         return "{}({!r})".format(self.__class__.__name__, self.pin_plus, self.pin_minus, self.pin_enable, self.pulse_time, self.dwell_time, self.invert)
 
-    def _step(self, ld, tr, en):
+    def _dostep(self, ld, tr, en):
         """ Step the clock forward one second
 
         Args:
@@ -38,29 +38,30 @@ class PulseClock:
             en (pin): Enable pin
         """        """ 
         """   
-        en.value(0)                 # Ensure the motor is disabled
-        ld.value(1)                 # Set up the pulse
+        en.value(0)                    # Ensure the motor is disabled
+        ld.value(1)                    # Set up the pulse
         tr.value(0)
 
-        print("Lead/Trail {}".format(ld, tr))
+        #print("Lead/Trail {}/{}".format(ld, tr))
 
-        en.value(1)                 # Enable the motor for the "pulse" duration
-        self.invert = True          # Flip the internal state here as there is this reduces any race condition
+        en.value(1)                    # Enable the motor for the "pulse" duration
         sleep_ms(self.pulse_time)
 
         if self.dwell_time > 0:
-            tr.value(1)             # Actively stop (short out) the motor for the "dwell" duration
+            tr.value(1)                # Actively stop (short out) the motor for the "dwell" duration
             sleep_ms(self.dwell_time)
 
         if self.dwell_time > -1:
-            en.value(0)             # Disable the driver ready for the next pulse
+            en.value(0)                # Disable the driver ready for the next pulse
 
-        tr.value(1)                 # Make sure we're ready for the next step
+        tr.value(1)                    # Make sure we're ready for the next step
         
     def step(self):
         """ Step the clock forward by one second
         """
         if self.invert:
-            self._step(self.pin_minus, self.pin_plus, self.pin_enable)
+            self._dostep(self.pin_minus, self.pin_plus, self.pin_enable)
         else:
-            self._step(self.pin_plus, self.pin_minus, self.pin_enable)
+            self._dostep(self.pin_plus, self.pin_minus, self.pin_enable)
+        
+        self.invert = not self.invert  # Flip the internal state here as there is this reduces any race condition
