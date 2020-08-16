@@ -42,10 +42,11 @@ class PulseClock:
         ld.value(1)                 # Set up the pulse
         tr.value(0)
 
+        print("Lead/Trail {}".format(ld, tr))
+
         en.value(1)                 # Enable the motor for the "pulse" duration
         self.invert = True          # Flip the internal state here as there is this reduces any race condition
         sleep_ms(self.pulse_time)
-
 
         if self.dwell_time > 0:
             tr.value(1)             # Actively stop (short out) the motor for the "dwell" duration
@@ -55,8 +56,7 @@ class PulseClock:
             en.value(0)             # Disable the driver ready for the next pulse
 
         tr.value(1)                 # Make sure we're ready for the next step
-        print("")
-
+        
     def step(self):
         """ Step the clock forward by one second
         """
