@@ -1,5 +1,5 @@
 from machine import I2C, Pin, RTC
-from utime import sleep_ms, time
+from utime import sleep_ms, time, mktime
 import ujson
 import display
 
@@ -64,7 +64,7 @@ def update_clock(pc, ds, rtc, tft, hands):
 def align_clocks(rtc, ds, tft, last_sync):
     print("align_clocks")
 
-    now = time.mktime(rtc.now()) #  Get the current time as seconds from epoch
+    now = mktime(rtc.now()) #  Get the current time as seconds from epoch
 
     if rtc.synced():
         # Always tell the user that the network time is OK
