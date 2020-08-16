@@ -50,7 +50,7 @@ def dgclock():
     hands         = hand_position[3] * 3600 + hand_position[4] * 60 + hand_position[5]  % 43200
 
     # Initialise the pulse clock itself - pulses of 200/100 seem reliable
-    pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 200, 100, invert)
+    pc = pulseclock.PulseClock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 150, 100, invert)
 
     try:
         while True:
@@ -90,7 +90,7 @@ def dgclock():
                 if (current % 900) == 62:  
                     print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
                     rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
-                                
+
             if (current % 900) == 63: # Reset the recent_sync flag when the next second arrives
                 recent_sync = False
 

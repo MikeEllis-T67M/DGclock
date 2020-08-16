@@ -32,7 +32,7 @@ class PulseClock:
     def _step_even(self):
         """ Step the clock forward one even second (0-1, 2-3, 4-5 etc)
         """   
-        #print("Even")     
+        print("+", end="")     
         self.pin_enable.value(0)        # Ensure the motor is disabled
 
         self.pin_plus.value(1)          # Set up an "even" pulse
@@ -45,16 +45,19 @@ class PulseClock:
         self.pin_minus.value(1)         # Actively stop (short out) the motor for the "dwell" duration
 
         if self.dwell_time > 0:
+            print(".", end="")
             sleep_ms(self.dwell_time)
 
         if self.dwell_time > -1:
+            print("0", end="")
             self.pin_enable.value(0)        # Disable the driver ready for the next pulse
 
+        print("")
 
     def _step_odd(self):
         """ Step the clock forward one off second (1-2, 3-4, 5-6 etc)
         """
-        #print("Odd")
+        print("-", end="")
         self.pin_enable.value(0)        # Ensure the motor is disabled
 
         self.pin_plus.value(0)          # Set up an "even" pulse
@@ -67,10 +70,14 @@ class PulseClock:
         self.pin_plus.value(1)         # Actively stop (short out) the motor for the "dwell" duration
 
         if self.dwell_time > 0:
+            print(".", end="")
             sleep_ms(self.dwell_time)
 
         if self.dwell_time > -1:
+            print("0", end="")
             self.pin_enable.value(0)        # Disable the driver ready for the next pulse    
+
+        print("")
 
     def step(self):
         """ Step the clock forward by one second
