@@ -8,9 +8,6 @@ import pulseclock
 import settings
 import wifi
 
-hands     = 0 # The current hand position
-last_sync = 0 # The time the clocks were last synced
-
 def text_centred(tft, text, vpos):
     """ Display some text centred on the screen
 
@@ -30,7 +27,7 @@ def init_display():
     text_centred(tft, "DG Clock", 8)
     return tft
 
-def update_clock(pc, ds, rtc, tft):
+def update_clock(pc, ds, rtc, tft, hands):
     """ Update the mechanical clock
 
     Args:
@@ -47,7 +44,8 @@ def update_clock(pc, ds, rtc, tft):
     diff = current - hands 
 
     if -7200 < diff and diff < 0: # If the difference is less than two hours, it's quicker just to stop the clock
-        return False
+        sleep_ms(100) # A little bit of idle time for background threads to run in - but not too much so that the hand movement looks jerky
+        return hands
 
     # Update the stored hand position
     hands             = (hands + 1) % 43200
@@ -61,9 +59,9 @@ def update_clock(pc, ds, rtc, tft):
     text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(current_time[3],      current_time[4],      current_time[5]),      60)
     text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(new_hand_position[3], new_hand_position[4], new_hand_position[5]), 82)
 
-    return True
+    return hands
 
-def align_clocks(rtc, ds, tft):
+def align_clocks(rtc, ds, tft, last_sync):
     print("align_clocks")
     if rtc.synced():
         # Always tell the user that the network time is OK
@@ -83,6 +81,8 @@ def align_clocks(rtc, ds, tft):
             print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
             rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
             last_sync   = rtc.now() # Remember when we last synced
+
+    return last_sync
 
 def dgclock():
     # Intialised the display
@@ -122,10 +122,9 @@ def dgclock():
 
     try:
         while True:
-            if not update_clock(pc, ds, rtc, tft):
-                sleep_ms(100) # A little bit of idle time for background threads to run in - but not too much so that the hand movement looks jerky
+            hands = update_clock(pc, ds, rtc, tft, hands)
 
-            align_clocks(rtc, ds, tft)
+            last_sync = align_clocks(rtc, ds, tft, last_sync)
 
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus
