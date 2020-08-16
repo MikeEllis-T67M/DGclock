@@ -8,6 +8,12 @@ import pulseclock
 import settings
 import wifi
 
+hands     = 0 # The current hand position
+tft       = 0 # The TFT display
+ds        = 0 # The DS3231 RTC chip
+pc        = 0 # The actual pulse clock mechanism
+last_sync = 0 # The time the clocks were last synced
+
 def text_centred(tft, text, vpos):
     """ Display some text centred on the screen
 
@@ -26,7 +32,59 @@ def init_display():
     tft.font(tft.FONT_Comic) # It's big and easy to read...
     text_centred(tft, "DG Clock", 8)
     return tft
-        
+
+def update_clock(pc):
+    """ Update the mechanical clock
+
+    Args:
+        pc (PulseClock): The pulse clock which (may) need to be stepped
+
+    Returns:
+        True is the clock was stepped, otherwise False
+    """    
+    current_time = rtc.now()
+    current = (current_time[3]  * 3600 + current_time[4]  * 60 + current_time[5]) % 43200
+
+    # How far apart are the hands - allowing for wrap-around
+    diff = current - hands 
+
+    if -7200 < diff and diff < 0: # If the difference is less than two hours, it's quicker just to stop the clock
+        return False
+
+    # Update the stored hand position
+    hands             = (hands + 1) % 43200
+    new_hand_position = (0, 0, 0, (hands // 3600), (hands // 60) % 60, hands % 60, 0, 0) 
+    ds.alarm1_tm      = new_hand_position
+
+    # Move the clock - note that there is a potential race condition here
+    pc.step()
+
+    # Update the display
+    text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(current_time[3],      current_time[4],      current_time[5]),      60)
+    text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(new_hand_position[3], new_hand_position[4], new_hand_position[5]), 82)
+
+    return True
+
+def align_clocks():
+    if rtc.synced():
+        # Always tell the user that the network time is OK
+        text_centred(tft, "NTP Sync OK", 104)
+
+        # Set the DS from the RTC when NTP OK - but only every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
+        if rtc.now() > last_sync + 900:  
+            print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
+            ds.rtc_tm   = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
+            last_sync   = rtc.now() # Remember when we last synced
+    else:
+        # Always tell the user that the network time has failed
+        text_centred(tft, "No NTP sync", 104)
+
+        # Re-sync the RTC from the DS when NTP failed every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
+        if rtc.now() > last_sync + 900:  
+            print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
+            rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
+            last_sync   = rtc.now() # Remember when we last synced
+
 def dgclock():
     # Intialised the display
     tft = init_display()
@@ -47,9 +105,9 @@ def dgclock():
     rtc.init(ds.rtc_tm)
     print("RTC set to    : {}".format(rtc.now()))
     rtc.ntp_sync("pool.ntp.org", update_period = 900)
-    recent_sync = False
+    last_sync = ds.rtc
 
-    # Read the NV stored hand position
+    # Initialise the hand position using the value stored in NV-RAM in the DS chip
     hand_position = ds.alarm1_tm
     invert        = hand_position[5] % 2 == 0 # Is the second hand pointing to an even or odd number?
     hands         = hand_position[3] * 3600 + hand_position[4] * 60 + hand_position[5]  % 43200
@@ -65,48 +123,11 @@ def dgclock():
 
     try:
         while True:
-            # Convert current time to seconds since 00:00:00 (12-hour clock mode)
-            current_time = rtc.now()
-            current = (current_time[3]  * 3600 + current_time[4]  * 60 + current_time[5]) % 43200
-
-            # How far apart are the hands - allowing for wrap-around
-            diff = current - hands 
-            if diff > 0 or diff < -7200: # If the difference is less than two hours, it's quicker just to stop the clock
-                # Update the stored hand position
-                hands             = (hands + 1) % 43200
-                new_hand_position = (0, 0, 0, (hands // 3600), (hands // 60) % 60, hands % 60, 0, 0) 
-                ds.alarm1_tm      = new_hand_position
-
-                # Move the clock - note that there is a potential race condition here
-                pc.step()
-
-                # Update the display
-                text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(current_time[3],      current_time[4],      current_time[5]),      60)
-                text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(new_hand_position[3], new_hand_position[4], new_hand_position[5]), 82)
-            else:
+            if not update_clock:
                 sleep_ms(100) # A little bit of idle time for background threads to run in - but not too much so that the hand movement looks jerky
 
-            if rtc.synced():
-                # Always tell the user that the network time is OK
-                text_centred(tft, "NTP Sync OK", 104)
-
-                # Re-sync the DS from the RTC when NTP OK - but only every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
-                if not recent_sync:  
-                    print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
-                    ds.rtc_tm   = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
-                    recent_sync = True      # Only sync once every 15 minutes, not once per loop
-            else:
-                # Always tell the user that the network time has failed
-                text_centred(tft, "No NTP sync", 104)
-
-                # Re-sync the RTC from the DS when NTP failed every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
-                if (current % 900) == 62:  
-                    print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
-                    rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
-
-            if (current % 900) == 62: # Reset the recent_sync flag when the next second arrives
-                recent_sync = False
-
+            align_clocks()
+            
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus
         print("Hand position: {}".format(ds.alarm1_tm))
