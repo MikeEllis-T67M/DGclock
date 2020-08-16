@@ -96,7 +96,7 @@ def dgclock():
 
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus
-        print("Hand position: {}", format(ds.alarm1_tm))
+        print("Hand position: {}".format(ds.alarm1_tm))
         i2c.deinit()
         tft.deinit()
         # del i2c
