@@ -114,7 +114,7 @@ def dgclock():
             hands = update_clock(pc, ds, rtc, tft, hands)
 
             # Periodically re-sync the clocks
-            if now > last_sync + 900:
+            if mktime(rtc.now()) > last_sync + 900:
                 last_sync = align_clocks(rtc, ds)
 
             # Tell the user whether the NTP sync is good or not
