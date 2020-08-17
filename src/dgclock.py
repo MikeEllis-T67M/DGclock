@@ -36,7 +36,6 @@ def update_clock(pc, ds, rtc, tft, hands):
     Returns:
         True is the clock was stepped, otherwise False
     """  
-    print("update_clock")  
     current_time = rtc.now()
     current = (current_time[3]  * 3600 + current_time[4]  * 60 + current_time[5]) % 43200
 
@@ -62,8 +61,6 @@ def update_clock(pc, ds, rtc, tft, hands):
     return hands
 
 def align_clocks(rtc, ds, tft, last_sync):
-    print("align_clocks")
-
     now = mktime(rtc.now()) #  Get the current time as seconds from epoch
 
     if rtc.synced():
