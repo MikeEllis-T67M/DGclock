@@ -42,7 +42,7 @@ def update_clock(pc, ds, rtc, tft, hands):
     # How far apart are the hands - allowing for wrap-around
     diff = current - hands 
 
-    if -7200 < diff and diff < 0: # If the difference is less than two hours, it's quicker just to stop the clock
+    if -7200 < diff and diff <= 0: # If the difference is less than two hours, it's quicker just to stop the clock
         sleep_ms(100) # A little bit of idle time for background threads to run in - but not too much so that the hand movement looks jerky
         return hands
 
