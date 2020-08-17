@@ -10,7 +10,7 @@ class PulseClock:
             drive_minus  (Pin):     The pin used to drive the motor "-ve" terminal
             drive_enable (Pin):     The pin used to enable the motor driver
             pulse_time   (number):  The duration of the pulse to step in milliseconds
-            dwell_time   (number):  The duration of the dwell time after a step in milliseconds. 0 = no dwell, -1 = no power-save
+            dwell_time   (number):  The duration of the dwell time after a step in milliseconds.
             invert       (boolean): Should the next pulse by inverted (True/False). 
             
         Notes:
@@ -45,21 +45,14 @@ class PulseClock:
         #print("Lead/Trail {}/{}".format(ld, tr))
 
         # Do a double pulse just in case the mechanism sticks
-        en.value(1)                    # Enable the motor for the "pulse" duration
+        en.value(1)                    # Enable the motor for half the "pulse" duration
         sleep_ms(self.pulse_time // 2)
         en.value(0)                    # Disable the motor for a short time
-        sleep_ms(10)
-        en.value(1)                    # Re-enable the motor for the "pulse" duration
+        sleep_ms(self.dwell_time)
+        en.value(1)                    # Re-enable the motor for the second half of the "pulse" duration
         sleep_ms(self.pulse_time // 2)
-
-        if self.dwell_time > 0:
-            tr.value(1)                # Actively stop (short out) the motor for the "dwell" duration
-            sleep_ms(self.dwell_time)
-
-        if self.dwell_time > -1:
-            en.value(0)                # Disable the driver ready for the next pulse
-
-        #tr.value(1)                    # Make sure we're ready for the next step
+        tr.value(1)                    # Actively stop the motor
+        en.value(0)                    # Disable the driver ready for the next pulse
         
     def step(self):
         """ Step the clock forward by one second
