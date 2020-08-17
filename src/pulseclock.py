@@ -44,8 +44,13 @@ class PulseClock:
 
         #print("Lead/Trail {}/{}".format(ld, tr))
 
+        # Do a double pulse just in case the mechanism sticks
         en.value(1)                    # Enable the motor for the "pulse" duration
-        sleep_ms(self.pulse_time)
+        sleep_ms(self.pulse_time / 2)
+        en.value(0)                    # Disable the motor for a short time
+        sleep_ms(10)
+        en.value(1)                    # Re-enable the motor for the "pulse" duration
+        sleep_ms(self.pulse_time / 2)
 
         if self.dwell_time > 0:
             tr.value(1)                # Actively stop (short out) the motor for the "dwell" duration
