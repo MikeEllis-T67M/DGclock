@@ -111,6 +111,7 @@ def dgclock():
 
     try:
         while True:
+            # Move the clock forward if needed
             hands = update_clock(pc, ds, rtc, tft, hands)
 
             # Periodically re-sync the clocks
@@ -120,13 +121,12 @@ def dgclock():
             # Tell the user whether the NTP sync is good or not
             if rtc.synced():
                 text_centred(tft, "NTP Sync OK", 104)
-                if not ntp_synced: # Just achieved sync - set the clock immediately
-                    last_sync  = align_clocks(rtc, ds)
-                    ntp_synced = True
+                #if not ntp_synced: # Just achieved sync - set the clock immediately
+                #    last_sync  = align_clocks(rtc, ds)
+                #    ntp_synced = True
             else:
                 text_centred(tft, "No NTP Sync", 104)
                 ntp_synced = False
-    
 
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus
