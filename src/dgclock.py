@@ -61,16 +61,12 @@ def update_clock(pc, ds, rtc, tft, hands):
     return hands
 
 def align_clocks(rtc, ds):
-    now = mktime(rtc.now()) #  Get the current time as seconds from epoch
-
     if rtc.synced():
         print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
         ds.rtc_tm   = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
     else:
         print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
         rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
-
-    return now
 
 def dgclock():
     # Intialised the display
@@ -115,8 +111,10 @@ def dgclock():
             hands = update_clock(pc, ds, rtc, tft, hands)
 
             # Periodically re-sync the clocks
-            if mktime(rtc.now()) > last_sync + 900:
-                last_sync = align_clocks(rtc, ds)
+            now = mktime(rtc.now())
+            if now > last_sync + 900:
+                last_sync = now
+                align_clocks(rtc, ds)
 
             # Tell the user whether the NTP sync is good or not
             if rtc.synced():
