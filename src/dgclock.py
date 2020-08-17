@@ -71,7 +71,7 @@ def align_clocks(rtc, ds, tft, last_sync):
         if now > last_sync + 900:  
             print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
             ds.rtc_tm   = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
-            last_sync   = rtc       # Remember when we last synced
+            last_sync   = now       # Remember when we last synced
     else:
         # Always tell the user that the network time has failed
         text_centred(tft, "No NTP sync", 104)
