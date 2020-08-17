@@ -60,29 +60,17 @@ def update_clock(pc, ds, rtc, tft, hands):
 
     return hands
 
-def align_clocks(rtc, ds, tft, last_sync):
+def align_clocks(rtc, ds):
     now = mktime(rtc.now()) #  Get the current time as seconds from epoch
 
     if rtc.synced():
-        # Always tell the user that the network time is OK
-        text_centred(tft, "NTP Sync OK", 104)
-
-        # Set the DS from the RTC when NTP OK - but only every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
-        if now > last_sync + 900:  
-            print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
-            ds.rtc_tm   = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
-            last_sync   = now       # Remember when we last synced
+        print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
+        ds.rtc_tm   = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
     else:
-        # Always tell the user that the network time has failed
-        text_centred(tft, "No NTP sync", 104)
+        print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
+        rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
 
-        # Re-sync the RTC from the DS when NTP failed every 15 minutes at HH:01:02, HH:16:02, HH:31:02 and HH:46:02
-        if now > last_sync + 900:  
-            print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
-            rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
-            last_sync   = now # Remember when we last synced
-
-    return last_sync
+    return now
 
 def dgclock():
     # Intialised the display
@@ -104,7 +92,8 @@ def dgclock():
     rtc.init(ds.rtc_tm)
     print("RTC set to    : {}".format(rtc.now()))
     rtc.ntp_sync("pool.ntp.org", update_period = 900)
-    last_sync = ds.rtc
+    last_sync  = ds.rtc
+    ntp_synced = False
 
     # Initialise the hand position using the value stored in NV-RAM in the DS chip
     hand_position = ds.alarm1_tm
@@ -124,7 +113,20 @@ def dgclock():
         while True:
             hands = update_clock(pc, ds, rtc, tft, hands)
 
-            last_sync = align_clocks(rtc, ds, tft, last_sync)
+            # Periodically re-sync the clocks
+            if now > last_sync + 900:
+                last_sync = align_clocks(rtc, ds)
+
+            # Tell the user whether the NTP sync is good or not
+            if rtc.synced():
+                text_centred(tft, "NTP Sync OK", 104)
+                if not ntp_synced: # Just achieved sync - set the clock immediately
+                    last_sync  = align_clocks(rtc, ds)
+                    ntp_synced = True
+            else:
+                text_centred(tft, "No NTP Sync", 104)
+                ntp_synced = False
+    
 
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus
