@@ -24,7 +24,6 @@ def init_display():
     tft.init(tft.ST7789, bgr=False, rot=tft.LANDSCAPE, miso=17, backl_pin=4, backl_on=1, mosi=19, clk=18, cs=5, dc=16, splash = False)
     tft.setwin(40,52,320,240)
     tft.font(tft.FONT_Comic) # It's big and easy to read...
-    text_centred(tft, "DG Clock", 8)
     return tft
 
 def update_clock(pc, ds, rtc, tft, hands):
@@ -54,19 +53,32 @@ def update_clock(pc, ds, rtc, tft, hands):
     # Move the clock - note that there is a potential race condition here
     pc.step()
 
-    # Update the display
-    text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(current_time[3],      current_time[4],      current_time[5]),      60)
-    text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(new_hand_position[3], new_hand_position[4], new_hand_position[5]), 82)
-
     return hands
 
 def align_clocks(rtc, ds):
     if rtc.synced():
-        print("RTC synced  : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
+        print("RTC synced    : DS {} <- RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
         ds.rtc_tm   = rtc.now() # Copy from RTC to DS if the RTC is NTP synced
     else:
-        print("RTC non-sync: DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
+        print("RTC non-sync  : DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
         rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
+
+def update_display(tft, ipaddr, now, hands, ntp_sync):
+    # Title the display
+    text_centred(tft, "DG Clock", 8)
+
+    # Show the current IP address
+    text_centred(tft, "{}".format(ip_addr), 38)
+
+    # Show the current time and hand position
+    text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(now   // 3600, (now   // 60) % 60, now   % 60), 60)
+    text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(hands // 3600, (hands // 60) % 60, hands % 60), 82)
+
+    # Tell the user whether the NTP sync is good or not
+    if ntp_sync():
+        text_centred(tft, "NTP Sync OK", 104)
+    else:
+        text_centred(tft, "No NTP Sync", 104)
 
 def dgclock():
     # Intialised the display
@@ -81,7 +93,6 @@ def dgclock():
     # Connect to the WiFi 
     wifi_settings = settings.load_settings("wifi.json")
     ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
-    text_centred(tft, "{}".format(ip_addr), 38)
 
     # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
     rtc = RTC()
@@ -89,7 +100,6 @@ def dgclock():
     print("RTC set to    : {}".format(rtc.now()))
     rtc.ntp_sync("pool.ntp.org", update_period = 900)
     last_sync  = ds.rtc
-    ntp_synced = False
 
     # Initialise the hand position using the value stored in NV-RAM in the DS chip
     hand_position = ds.alarm1_tm
@@ -105,6 +115,12 @@ def dgclock():
                                clock_settings['Dwell'], 
                                invert)
 
+    # Configure the two input buttons
+    button_top = machine.Pin(0,  machine.Pin.IN, machine.Pin.PULL_UP) # No external pull-up
+    button_bot = machine.Pin(35, machine.Pin.IN)                      # No internal pull-up
+
+    mode = "Run"
+
     try:
         while True:
             # Move the clock forward if needed
@@ -116,15 +132,9 @@ def dgclock():
                 last_sync = now
                 align_clocks(rtc, ds)
 
-            # Tell the user whether the NTP sync is good or not
-            if rtc.synced():
-                text_centred(tft, "NTP Sync OK", 104)
-                #if not ntp_synced: # Just achieved sync - set the clock immediately
-                #    last_sync  = align_clocks(rtc, ds)
-                #    ntp_synced = True
-            else:
-                text_centred(tft, "No NTP Sync", 104)
-                ntp_synced = False
+            # Write something helpful on the display
+            update_display(tft, ipaddr, now, hands, rtc.synced()):
+
 
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus
