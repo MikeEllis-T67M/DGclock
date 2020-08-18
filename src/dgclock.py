@@ -133,8 +133,7 @@ def dgclock():
                 align_clocks(rtc, ds)
 
             # Write something helpful on the display
-            update_display(tft, ipaddr, now, hands, rtc.synced()):
-
+            update_display(tft, ipaddr, now, hands, rtc.synced())
 
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus
