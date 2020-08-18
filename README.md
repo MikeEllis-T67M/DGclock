@@ -28,7 +28,7 @@ this into an accurate, automatic-setting clock?
     * Pulse counting might actually be practicable
     * NV storage of "last known hand position" may be enough
 * Stopping rather than spinning for small backward adjustments?
-  * Definitely!
+  * Definitely! Stepping is really quiter slow.
 
 ### Knowing the time
 * NTP from a pool server **Yes**
@@ -45,15 +45,11 @@ Use a TTGO-T ESP32 processor with built-in WiFi, Bluetooth, GPIO and capacitive 
 
 Circuit now built and working. Motor drive is configured such that Pin 25 drives from even numbered seconds to odd seconds, while Pin 26 drives from odd seconds to even. Pulse length of around 125ms just about works, but 200ms is much more reliable. Actively stopping the hands before disabling the driver produces a "nicer" look to the movement. Stop duration about the same as the pulse duration is best - but this does seriously limit the maximum speed the clock can be moved.
 
-DS3231 class almost completely re-written to implement OO access methods for RTC and Alarm1. 
+DS3231 class almost completely re-written to implement OO access methods for RTC and Alarm1. Using the FreeRTOS RTC for routine time updates, with automatic NTP updates. When NTP-syncs, set the DS from the RTC, but if there's no NTP, work the other way around since hte DS is supremely accurate.
 
-Basic version of the main thread now working - pulses the clock fast if it is behind the realtime, but stops it if it's *"only"* an hour or so ahead as it's quicker to let real-time catch up.
+Basic version of the main thread now working - pulses the clock fast if it is behind the realtime, but stops it if it's *"only"* an hour or so ahead as it's quicker to let real-time catch up. Clock pulsing is HYPER sensitive to duration - too fast and it can miss a pulse, or even start "sliding". Worse, a single pulse can occasionally be missed, hence now doing a 75:25 double-pulse with a short dwell in between. If the next pulse occurs too quickly, however, the clock can "glide" forward by several seconds, or even step backwards! There also appears to be a temperature sensitivity, and maybe a voltage sensitivity too.
 
 ## To Do
-* Set the DS3231 RTC from NTP - kinda done, but via the FreeRTOS RTC which runs in localtime mode not UTC, so.... 
-* Periodically align the FreeRTOS RTC from the DS3231 - set to every 60 seconds for debug purposes
-* Process a TZ description - tricky given that the FreeRTOS RTC runs in localtime
-  * Applying the change at the right time given it's written in local time but the RTC is in UTC
 * Use the OLED for a status display
   * Manually set hands to midnight and press "go"?
 * Set up AP

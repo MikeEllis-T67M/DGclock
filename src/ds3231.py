@@ -25,10 +25,12 @@ class DS3231:
         if DS3231_I2C_ADDR not in self.ds3231.scan():
             raise RuntimeError("DS3231 not found on I2C bus at %d" % DS3231_I2C_ADDR)
 
+    # -------------------------------------------------------------------------------------
     def __repr__(self):
         '''Returns representation of the object'''
         return("{}({!r})".format(self.__class__.__name__, self.ds3231))
 
+    # -------------------------------------------------------------------------------------
     @staticmethod
     def bcd2dec(bcd):
         """ Convert a BCD-encoded value in the range 0-99 to its decimal equivalent
@@ -41,6 +43,7 @@ class DS3231:
         """
         return (((int(bcd) & 0xf0) >> 4) * 10 + (int(bcd) & 0x0f))
 
+    # -------------------------------------------------------------------------------------
     @staticmethod
     def dec2bcd(dec):
         """ Convert a decimal value in the range 0-99 to its BCD equivalent
@@ -58,6 +61,7 @@ class DS3231:
             print("While converting decimal = {}".format(dec))
         return (tens << 4) + units
 
+    # -------------------------------------------------------------------------------------
     @staticmethod
     def tm2dsrtc(tm):
         """ Convert tm format tuple into DS3231 RTC register format
@@ -77,6 +81,7 @@ class DS3231:
             ds_format[5] += 128 # Set the century bit (embedded in the month)        
         return ds_format
 
+    # -------------------------------------------------------------------------------------
     @staticmethod
     def dsrtc2tm(ds_format):
         """ Convert DS3231 register format into tm-format
@@ -102,6 +107,7 @@ class DS3231:
 
         return utime.localtime(int(utime.mktime((year, month, date, hour, minute, second, 0, 0)))) # Fill in the day-of-week and day-of-year, andforce UTC conversion
 
+    # -------------------------------------------------------------------------------------
     @staticmethod
     def tm2dsal1(tm):
         """ Convert tm format tuple into DS3231 RTC register format
@@ -127,6 +133,7 @@ class DS3231:
                                    DS3231.dec2bcd(tm[2])))              # Date
         return ds_format
 
+    # -------------------------------------------------------------------------------------
     @staticmethod
     def dsal12tm(ds_format):
         """ Convert DS3231 register format into tm-format
@@ -156,6 +163,7 @@ class DS3231:
 
         return (year, month, day, hour, minute, second, day, 0) # Build localtime format
 
+    # -------------------------------------------------------------------------------------
     def read_ds3231_rtc(self):
         """ Read the RTC from the DS3231
 
@@ -168,6 +176,7 @@ class DS3231:
         self.ds3231.readfrom_mem_into(DS3231_I2C_ADDR, 0, buffer)
         return buffer
 
+    # -------------------------------------------------------------------------------------
     def read_ds3231_alarm1(self):
         """ Read the Alarm1 from the DS3231
 
@@ -180,18 +189,14 @@ class DS3231:
         self.ds3231.readfrom_mem_into(DS3231_I2C_ADDR, 7, buffer)
         return buffer
 
-    @property
-    def rtc_tm(self):
-        """ Read the DS3231 RTC and return the time as a tm tuple
-        """
-        return DS3231.dsrtc2tm(self.read_ds3231_rtc())
-
+    # -------------------------------------------------------------------------------------
     @property
     def rtc(self):
         """ Read the DS3231 RTC and return the time as seconds since epoch
         """
         return utime.mktime(self.rtc_tm)
 
+    # -------------------------------------------------------------------------------------
     @rtc.setter
     def rtc(self, time_to_set):
         """ Set the DS3231 RTC
@@ -201,6 +206,14 @@ class DS3231:
         """
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 0, DS3231.tm2dsrtc(utime.localtime(time_to_set)))
 
+    # -------------------------------------------------------------------------------------
+    @property
+    def rtc_tm(self):
+        """ Read the DS3231 RTC and return the time as a tm tuple
+        """
+        return DS3231.dsrtc2tm(self.read_ds3231_rtc())
+
+    # -------------------------------------------------------------------------------------
     @rtc_tm.setter
     def rtc_tm(self, time_to_set):
         """ Set the DS3231 RTC from a tm struct
@@ -210,6 +223,7 @@ class DS3231:
         """
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 0, DS3231.tm2dsrtc(time_to_set))
 
+    # -------------------------------------------------------------------------------------
     @property
     def alarm1_tm(self):
         """ Read the DS3231 RTC and return the time as a tm tuple
@@ -224,6 +238,7 @@ class DS3231:
         """
         return DS3231.dsal12tm(self.read_ds3231_alarm1())
 
+    # -------------------------------------------------------------------------------------
     @alarm1_tm.setter
     def alarm1_tm(self, time_to_set):
         """ Set the DS3231 RTC to the tm tuple given

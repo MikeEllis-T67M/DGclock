@@ -42,7 +42,6 @@ def update_clock(pc, ds, rtc, tft, hands):
     diff = current - hands 
 
     if -7200 < diff and diff <= 0: # If the difference is less than two hours, it's quicker just to stop the clock
-        sleep_ms(100) # A little bit of idle time for background threads to run in - but not too much so that the hand movement looks jerky
         return hands
 
     # Update the stored hand position
@@ -51,7 +50,10 @@ def update_clock(pc, ds, rtc, tft, hands):
     ds.alarm1_tm      = new_hand_position
 
     # Move the clock - note that there is a potential race condition here
-    pc.step()
+    if diff == 1:
+        pc.step()
+    else:
+        pc.faststep()
 
     return hands
 
@@ -63,7 +65,7 @@ def align_clocks(rtc, ds):
         print("RTC non-sync  : DS {} -> RTC {}".format(ds.rtc_tm, rtc.now())) # DEBUG
         rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
 
-def update_display(tft, ipaddr, now, hands, ntp_sync):
+def update_display(tft, ip_addr, now, hands, ntp_sync):
     # Title the display
     text_centred(tft, "DG Clock", 8)
 
@@ -71,11 +73,11 @@ def update_display(tft, ipaddr, now, hands, ntp_sync):
     text_centred(tft, "{}".format(ip_addr), 38)
 
     # Show the current time and hand position
-    text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(now   // 3600, (now   // 60) % 60, now   % 60), 60)
-    text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(hands // 3600, (hands // 60) % 60, hands % 60), 82)
+    text_centred(tft, "Actual {:2d}:{:02d}:{:02d}".format(now[3], now[4], now[5]), 60) # 24-hour format
+    text_centred(tft, "Hands  {:2d}:{:02d}:{:02d}".format(int(hands // 3600) % 12, int(hands // 60) % 60, int(hands) % 60), 82) # 12-hour format
 
     # Tell the user whether the NTP sync is good or not
-    if ntp_sync():
+    if ntp_sync:
         text_centred(tft, "NTP Sync OK", 104)
     else:
         text_centred(tft, "No NTP Sync", 104)
@@ -99,7 +101,9 @@ def dgclock():
     rtc.init(ds.rtc_tm)
     print("RTC set to    : {}".format(rtc.now()))
     rtc.ntp_sync("pool.ntp.org", update_period = 900)
-    last_sync  = ds.rtc
+
+    # Initialise "not too often" counters
+    last_sync = last_update = mktime(rtc.now())
 
     # Initialise the hand position using the value stored in NV-RAM in the DS chip
     hand_position = ds.alarm1_tm
@@ -108,16 +112,11 @@ def dgclock():
 
     # Initialise the pulse clock itself - pulses of 200/100 seem reliable
     clock_settings = settings.load_settings("clock.json")
-    pc = pulseclock.PulseClock(Pin(clock_settings['Plus'],   Pin.OUT), 
-                               Pin(clock_settings['Minus'],  Pin.OUT), 
-                               Pin(clock_settings['Enable'], Pin.OUT), 
-                               clock_settings['Pulse'],
-                               clock_settings['Dwell'], 
-                               invert)
+    pc = pulseclock.PulseClock(clock_settings, invert)
 
     # Configure the two input buttons
-    button_top = machine.Pin(0,  machine.Pin.IN, machine.Pin.PULL_UP) # No external pull-up
-    button_bot = machine.Pin(35, machine.Pin.IN)                      # No internal pull-up
+    button_top = Pin(0,  Pin.IN, Pin.PULL_UP) # No external pull-up
+    button_bot = Pin(35, Pin.IN)              # No internal pull-up
 
     mode = "Run"
 
@@ -126,14 +125,17 @@ def dgclock():
             # Move the clock forward if needed
             hands = update_clock(pc, ds, rtc, tft, hands)
 
-            # Periodically re-sync the clocks
             now = mktime(rtc.now())
+
+            # Periodically re-sync the clocks
             if now > last_sync + 900:
                 last_sync = now
                 align_clocks(rtc, ds)
 
             # Write something helpful on the display
-            update_display(tft, ipaddr, now, hands, rtc.synced())
+            if now != last_update:
+                last_update = now
+                update_display(tft, ip_addr, rtc.now(), hands, rtc.synced())
 
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus

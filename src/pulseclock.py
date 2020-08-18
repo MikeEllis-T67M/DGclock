@@ -2,7 +2,7 @@ from utime import sleep_ms
 from machine import Pin
 
 class PulseClock:
-    def __init__(self, drive_plus, drive_minus, drive_enable, pulse_time, dwell_time, invert):
+    def __init__(self, config, invert):
         """ Initialise the pulse clock
 
         Args:
@@ -16,19 +16,19 @@ class PulseClock:
         Notes:
             The next pulse should be inverted if the second hand is currently pointing to an odd number of seconds.
         """        
-        self.pin_plus    = drive_plus
-        self.pin_minus   = drive_minus
-        self.pin_enable  = drive_enable
-        self.pulse1_time = pulse_time // 4 * 3
-        self.pulse2_time = pulse_time // 4
-        self.dwell_time  = dwell_time
-        self.invert      = invert
+        self.config     = config
+        self.invert     = invert
+        self.pin_plus   = Pin(config['Plus'],   Pin.OUT)
+        self.pin_minus  = Pin(config['Minus'],  Pin.OUT)
+        self.pin_enable = Pin(config['Enable'], Pin.OUT)
+
         self.step() # Ensure the mechanism is fully aligned not in some midway state
 
     def __repr__(self):
         """Returns representation of the object
         """
-        return "{}({!r})".format(self.__class__.__name__, self.pin_plus, self.pin_minus, self.pin_enable, self.pulse_time, self.dwell_time, self.invert)
+        return "{}({!r})".format(self.__class__.__name__, self.pin_plus, self.pin_minus, self.pin_enable, 
+                                self.pulse_time, self.pulse_count, self.dwell_time, self.stop_time, self.recover_time, self.invert)
 
     def _dostep(self, ld, tr, en):
         """ Step the clock forward one second
@@ -41,19 +41,39 @@ class PulseClock:
         """   
         en.value(0)                    # Ensure the motor is disabled
         ld.value(1)                    # Set up the pulse
+
+        for _ in range(self.config["PulseCount"]):
+            tr.value(0)
+            en.value(1)                    # Kick the motor
+            sleep_ms(self.config["Pulse"])
+            tr.value(1)                    # Stop 
+            sleep_ms(self.config["Dwell"])
+        
+        sleep_ms(self.config["Stop"])
+        en.value(0)                    # Disable the driver ready for the next pulse
+        sleep_ms(self.config["Recover"])
+        
+    def _dofaststep(self, ld, tr, en):
+        """ Step the clock forward one second
+
+        Args:
+            ld (pin): Leading pin
+            tr (pin): Trailing pin
+            en (pin): Enable pin
+        """        """ 
+        """   
+        en.value(0)                          # Ensure the motor is disabled
+        ld.value(1)                          # Set up the pulse
         tr.value(0)
 
-        #print("Lead/Trail {}/{}".format(ld, tr))
-
-        # Do a double pulse just in case the mechanism sticks
-        en.value(1)                    # Enable the motor for three quarters the "pulse" duration
-        sleep_ms(self.pulse1_time)
-        en.value(0)                    # Disable the motor for a short time
-        sleep_ms(self.dwell_time)
-        en.value(1)                    # Re-enable the motor for the second half of the "pulse" duration
-        sleep_ms(self.pulse2_time)
-        tr.value(1)                    # Actively stop the motor
-        en.value(0)                    # Disable the driver ready for the next pulse
+        en.value(1)                          # Kick the motor
+        sleep_ms(self.config["FastPulse"])   # One big pulse
+        tr.value(1)                          # Actively stop the motor
+        sleep_ms(self.config["FastDwell"])
+        tr.value(0)                          # Second pulse
+        sleep_ms(self.config["FastPulse"])
+        tr.value(1)                          # Second stop
+        sleep_ms(self.config["FastStop"])
         
     def step(self):
         """ Step the clock forward by one second
@@ -62,5 +82,15 @@ class PulseClock:
             self._dostep(self.pin_minus, self.pin_plus, self.pin_enable)
         else:
             self._dostep(self.pin_plus, self.pin_minus, self.pin_enable)
+        
+        self.invert = not self.invert  # Flip the internal state here as there is this reduces any race condition
+
+    def faststep(self):
+        """ Step the clock forward by one second
+        """
+        if self.invert:
+            self._dofaststep(self.pin_minus, self.pin_plus, self.pin_enable)
+        else:
+            self._dofaststep(self.pin_plus, self.pin_minus, self.pin_enable)
         
         self.invert = not self.invert  # Flip the internal state here as there is this reduces any race condition

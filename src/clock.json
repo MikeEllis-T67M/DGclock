@@ -1,0 +1,13 @@
+{
+	"Plus": 	  26,
+	"Minus": 	  25,
+	"Enable": 	  27,
+	"Pulse": 	  70,
+	"PulseCount": 3,
+	"Dwell": 	  25,
+	"Stop":       200,
+	"Recover":    100,
+	"FastPulse":  100,
+	"FastDwell":  10,
+	"FastStop":   150,
+}
