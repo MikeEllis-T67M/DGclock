@@ -16,12 +16,13 @@ class PulseClock:
         Notes:
             The next pulse should be inverted if the second hand is currently pointing to an odd number of seconds.
         """        
-        self.pin_plus   = drive_plus
-        self.pin_minus  = drive_minus
-        self.pin_enable = drive_enable
-        self.pulse_time = pulse_time
-        self.dwell_time = dwell_time
-        self.invert     = invert
+        self.pin_plus    = drive_plus
+        self.pin_minus   = drive_minus
+        self.pin_enable  = drive_enable
+        self.pulse1_time = pulse_time // 4 * 3
+        self.pulse2_time = pulse_time // 4
+        self.dwell_time  = dwell_time
+        self.invert      = invert
         self.step() # Ensure the mechanism is fully aligned not in some midway state
 
     def __repr__(self):
@@ -45,12 +46,12 @@ class PulseClock:
         #print("Lead/Trail {}/{}".format(ld, tr))
 
         # Do a double pulse just in case the mechanism sticks
-        en.value(1)                    # Enable the motor for half the "pulse" duration
-        sleep_ms(self.pulse_time // 2)
+        en.value(1)                    # Enable the motor for three quarters the "pulse" duration
+        sleep_ms(self.pulse1_time)
         en.value(0)                    # Disable the motor for a short time
         sleep_ms(self.dwell_time)
         en.value(1)                    # Re-enable the motor for the second half of the "pulse" duration
-        sleep_ms(self.pulse_time // 2)
+        sleep_ms(self.pulse2_time)
         tr.value(1)                    # Actively stop the motor
         en.value(0)                    # Disable the driver ready for the next pulse
         
