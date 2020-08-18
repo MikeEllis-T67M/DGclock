@@ -1,3 +1,7 @@
 ~$Wiring diagram.pptx
 src/old_ds3231.py
 .vscode/settings.json
+.vscode/launch.json
+src/clock.json
+src/wifi_ap.json
+src/wifi.json
