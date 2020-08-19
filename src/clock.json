@@ -7,7 +7,8 @@
 	"Dwell": 	  25,
 	"Stop":       200,
 	"Recover":    100,
-	"FastPulse":  100,
-	"FastDwell":  10,
-	"FastStop":   150,
+	"FastPulse1": 90,
+	"FastDwell":  30,
+	"FastPulse2": 70,
+	"FastStop":   200,
 }

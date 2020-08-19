@@ -66,13 +66,13 @@ class PulseClock:
         ld.value(1)                          # Set up the pulse
         tr.value(0)
 
-        en.value(1)                          # Kick the motor
-        sleep_ms(self.config["FastPulse"])   # One big pulse
-        tr.value(1)                          # Actively stop the motor
+        en.value(1)                               # Kick the motor
+        sleep_ms(self.config["FastPulse1"])        # Full pulse to start with
+        tr.value(1)                               # Actively stop the motor
         sleep_ms(self.config["FastDwell"])
-        tr.value(0)                          # Second pulse
-        sleep_ms(self.config["FastPulse"])
-        tr.value(1)                          # Second stop
+        tr.value(0)                               # Second pulse half size
+        sleep_ms(self.config["FastPulse2"])
+        tr.value(1)                               # Second stop
         sleep_ms(self.config["FastStop"])
         
     def step(self):
