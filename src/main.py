@@ -41,21 +41,24 @@ def update_clock(pc, ds, rtc, tft, hands):
     # How far apart are the hands - allowing for wrap-around
     diff = current - hands 
 
-    if -7200 < diff and diff <= 0: # If the difference is less than two hours, it's quicker just to stop the clock
-        return hands
+    # If the difference is less than two hours, it's quicker just to 
+    # stop the clock, but get the second hand to zero first for neatness
+    if -7200 < diff and diff <= 0 and hands % 60 == 0: 
+        return hands, "Wait"
 
     # Update the stored hand position
     hands             = (hands + 1) % 43200
     new_hand_position = (0, 0, 0, (hands // 3600), (hands // 60) % 60, hands % 60, 0, 0) 
     ds.alarm1_tm      = new_hand_position
 
-    # Move the clock - note that there is a potential race condition here
+    # Move the clock - note that there is a potential race condition here as
+    # we've already updated the stored hand position
     if diff == 1:
         pc.step()
+        return hands, "Slow"
     else:
         pc.faststep()
-
-    return hands
+        return hands, "Fast"
 
 def align_clocks(rtc, ds):
     if rtc.synced():
@@ -126,7 +129,7 @@ def dgclock():
         while True:
             # Move the clock forward if needed
             if mode == "Running":
-                hands = update_clock(pc, ds, rtc, tft, hands)
+                hands, step_mode = update_clock(pc, ds, rtc, tft, hands)
 
             now = mktime(rtc.now())
 
@@ -137,6 +140,7 @@ def dgclock():
 
             # Very simple mode switching
             if button_top.value() == 0:
+                sleep_ms(200)
                 mode = "Config"
             
             if button_bot.value() == 0:
@@ -145,7 +149,7 @@ def dgclock():
             # Write something helpful on the display
             if now != last_update:
                 last_update = now
-                update_display(tft, ip_addr, rtc.now(), hands, rtc.synced(), mode)
+                update_display(tft, ip_addr, rtc.now(), hands, rtc.synced(), "    " + mode + " " + step_mode + "    ")
 
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus
