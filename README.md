@@ -69,4 +69,40 @@ Need to add support for:
   * Squarewave generator
   * Clock stop/start control
   
+## OLED displays
+6 lines of text available, with two buttons near top-left and bottom-left of the display
+### Normal
 
+    DG Clock
+    Running / Catch-up
+    Current Time
+    NTP Sync / No network
+
+    <--- Press for more
+
+### Info
+
+    <--- Back
+    Network name
+    IP Address
+    Current Time
+    Hand position
+    <--- Stop hands
+
+### Stop hands
+
+    <--- Adjust hands
+
+    Hands Stopped!
+    Showing <current>
+
+    <--- Restart hands
+
+### Adjust hands
+
+    <--- Accept and start
+    Current  (as currently displayed)
+    HH:MM:00 (current time, zero seconds)
+    12:00:00
+    6:00:00
+    <--- Move down
