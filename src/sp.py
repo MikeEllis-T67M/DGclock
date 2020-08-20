@@ -1,11 +1,16 @@
 from machine import I2C, RTC, Pin
 from network import WLAN, AP_IF, STA_IF
 import ds3231
-import pulseclock
 i2c = I2C(0, scl=22, sda=21)
 ds = ds3231.DS3231(i2c)
 rtc = RTC()
 ds.alarm1_tm
+
+import dgclock
+clock = dgclock.DGClock("clock.json", ds.alarm1)
+
+import dgui
+ui = dgui.DGUI(clock.hands_tm)
 
 pc = pulseclock.Pulseclock(Pin(26, Pin.OUT), Pin(25, Pin.OUT), Pin(27, Pin.OUT), 200, 200, False)
 

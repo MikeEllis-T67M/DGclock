@@ -116,9 +116,6 @@ class DS3231:
         Returns:
             bytearray in DS alarm1 format
         """        
-        if tm[6] > 0:
-            print("Alarm 1   <-   {}".format(tm))   # DEBUG     
-
         if tm[2] == 0:
             # Day of week mode since date is outside the valid range (1-31)
             ds_format = bytearray((DS3231.dec2bcd(tm[5]),               # Seconds
@@ -204,7 +201,7 @@ class DS3231:
         Args:
             time_to_set (number): Seconds since epoch
         """
-        self.ds3231.writeto_mem(DS3231_I2C_ADDR, 0, DS3231.tm2dsrtc(utime.localtime(time_to_set)))
+        self.rtc_tm = utime.localtime(time_to_set)
 
     # -------------------------------------------------------------------------------------
     @property
@@ -222,6 +219,23 @@ class DS3231:
             time_to_set (tuple): Time to set as a tm tuple
         """
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 0, DS3231.tm2dsrtc(time_to_set))
+
+    # -------------------------------------------------------------------------------------
+    @property
+    def alarm1(self):
+        """ Read the DS3231 Alarm1 and return the time as seconds since epoch
+        """
+        return utime.mktime(self.alarm1_tm) + 2040441856 # Alarm has no date fields, so offset for year zero
+
+    # -------------------------------------------------------------------------------------
+    @alarm1.setter
+    def alarm1(self, time_to_set):
+        """ Set the DS3231 Alarm1
+
+        Args:
+            time_to_set (number): Seconds since epoch
+        """
+        self.alarm1_tm = utime.localtime(time_to_set)
 
     # -------------------------------------------------------------------------------------
     @property
@@ -252,8 +266,4 @@ class DS3231:
             The alarm interrupt will be set to "precise match" - i.e. Day/Date, HH:MM:SS must match exactly.
             The alarm interrupt enable will not be altered.        
         """
-        if time_to_set[6] > 0:
-            print("Before          {}".format(time_to_set))
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 7, DS3231.tm2dsal1(time_to_set))
-        if time_to_set[6] > 0:
-            print("After           {}".format(time_to_set))
