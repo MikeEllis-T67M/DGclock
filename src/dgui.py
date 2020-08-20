@@ -47,7 +47,7 @@ class DGUI:
         """
         return("{}({!r})".format(self.__class__.__name__, self.button1, self.button2, self.tft))
 
-    def text_centred(self, text, vpos):
+    def text_centred(self, text, vpos, color = False):
         """ Display some text centred on the screen
 
         Args:
@@ -55,9 +55,12 @@ class DGUI:
             text (string)     : The text to display
             vpos (int)        : The vertical position on the screen
         """    
-        self.tft.text(120 - int(self.tft.textWidth(text)/2), vpos - int(self.tft.fontSize()[1]/2), text)
+        if not color:
+            color = self.tft.get_fg()
 
-    def text_right(self, text, vpos):
+        self.tft.text(120 - int(self.tft.textWidth(text)/2), vpos - int(self.tft.fontSize()[1]/2), text, color)
+
+    def text_right(self, text, vpos, color = False):
         """ Display some text centred on the screen
 
         Args:
@@ -65,9 +68,12 @@ class DGUI:
             text (string)     : The text to display
             vpos (int)        : The vertical position on the screen
         """    
-        self.tft.text(240 - int(self.tft.textWidth(text)), vpos - int(self.tft.fontSize()[1]/2), text)
+        if not color:
+            color = self.tft.get_fg()
 
-    def text_left(self, text, vpos):
+        self.tft.text(240 - int(self.tft.textWidth(text)), vpos - int(self.tft.fontSize()[1]/2), text, color)
+
+    def text_left(self, text, vpos, color = False):
         """ Display some text centred on the screen
 
         Args:
@@ -75,7 +81,10 @@ class DGUI:
             text (string)     : The text to display
             vpos (int)        : The vertical position on the screen
         """    
-        self.tft.text(0, vpos - int(self.tft.fontSize()[1]/2), text)
+        if not color:
+            color = self.tft.get_fg()
+
+        self.tft.text(0, vpos - int(self.tft.fontSize()[1]/2), text, color) # Orange for buttons
 
     def handle_buttons(self):
         if not self.pressed_top and not self.pressed_bottom:
@@ -160,20 +169,20 @@ class DGUI:
         
         # Show the current network config
         if not self.sta.active():
-            self.text_centred("WiFi not active", 38)
+            self.text_centred("WiFi not active", 38, 0x0088ff)                          # Amber
         elif not self.sta.isconnected():
-            self.text_centred("WiFi not connected", 38)
+            self.text_centred("WiFi not connected", 38, 0x00ffff)                       # Red
         else:
-            self.text_centred("WiFi {}".format(self.sta.ifconfig()[0]), 38)
+            self.text_centred("WiFi {}".format(self.sta.ifconfig()[0]), 38, 0xff00ff)   # Green
         
         # Tell the user whether the NTP sync is good or not
         if self.rtc.synced():
-            self.text_centred("NTP Sync OK", 104)
+            self.text_centred("NTP Sync OK", 104, 0xff00ff)                             # Green
         else:
-            self.text_centred("No NTP Sync", 104)
+            self.text_centred("No NTP Sync", 104, 0x0088ff)                             # Amber
 
-        self.text_right(self.mode, 126)
-        self.text_left("<INFO", 126)
+        self.text_right(self.mode, 126, 0x0088ff)
+        self.text_left("<INFO",    126, 0xff8800)
 
     def drawscreen_info(self):
         # Show the current network config
@@ -190,21 +199,21 @@ class DGUI:
         else:
             self.text_centred("No NTP Sync", 104)
 
-        self.text_right(self.mode, 126)
-        self.text_left("<Back", 8)
-        self.text_left("<STOP", 126)
+        self.text_right(self.mode, 126, 0x0088ff)
+        self.text_left("<Back",      8, 0xff8800)
+        self.text_left("<STOP",    126, 0xff8800)
 
     def drawscreen_stop(self):
-        self.text_right(self.mode, 126)
-        self.text_left("<Adjust", 8)
-        self.text_left("<Back", 126)
+        self.text_right(self.mode, 126, 0x0088ff)
+        self.text_left("<Adjust",    8, 0xff8800)
+        self.text_left("<Back",    126, 0xff8800)
 
     def drawscreen_adjust(self):
         self.text_centred("{}".format(self.setmode), 104)
 
-        self.text_right(self.mode, 126)
-        self.text_left("<Select", 8)
-        self.text_left("<Change", 126)
+        self.text_right(self.mode, 126, 0x0088ff)
+        self.text_left("<Select",    8, 0xff8800)
+        self.text_left("<Change",  126, 0xff8800)
 
 def set_hands_callback(value):
     print("Request to set hands to {}".format(value))

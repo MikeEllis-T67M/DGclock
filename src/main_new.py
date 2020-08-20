@@ -5,7 +5,7 @@ import display
 
 import ds3231
 import dgclock
-import dggui
+import dgui
 import settings
 import wifi
 
