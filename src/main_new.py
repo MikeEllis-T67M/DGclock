@@ -65,16 +65,17 @@ def main():
                 align_clocks(rtc, ds)
 
             # Handle any button presses
-            ui.handle_buttons()
-
+            if ui.handle_buttons():  # Adjust hands was selected, so copy from UI to the clock
+                clock.hands_tm = ui.time_to_set
 
             # Update the screen
             ui.update_screen()
 
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus
-        print("Hand position: {}".format(ds.alarm1_tm))
+        print("Hands left at : {}".format(ds.alarm1_tm))
         i2c.deinit()
+        ui.tft.deinit()
 
 if __name__ == "__main__":
-    dgclock()
+    main()

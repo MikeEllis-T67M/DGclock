@@ -259,7 +259,8 @@ class DS3231:
     def alarm1(self):
         """ Read the DS3231 Alarm1 and return the time as seconds since epoch
         """
-        return utime.mktime(self.alarm1_tm) + 2040441856 # Alarm has no date fields, so offset for year zero
+        tm = self.alarm1_tm
+        return tm[3] * 3600 + tm[4] * 60 + tm[5]
 
     # -------------------------------------------------------------------------------------
     @alarm1.setter
@@ -268,6 +269,9 @@ class DS3231:
 
         Args:
             time_to_set (number): Seconds since epoch
+
+        Notes:
+            Only the hours, minutes and seconds are set in this - day and date are ignored
         """
         self.alarm1_tm = (0, 0, 0, (time_to_set // 3600) % 24, (time_to_set // 60) % 60, time_to_set % 60, 0, 0)
         #self.alarm1_tm = utime.localtime(time_to_set)
@@ -301,4 +305,5 @@ class DS3231:
             The alarm interrupt will be set to "precise match" - i.e. Day/Date, HH:MM:SS must match exactly.
             The alarm interrupt enable will not be altered.        
         """
+        #print("AL1 set to    : {}".format(time_to_set))
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 7, DS3231.tm2dsal1(time_to_set))

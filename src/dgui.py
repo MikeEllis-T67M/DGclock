@@ -7,10 +7,6 @@ import network
 import display
 class DGUI:
     def __init__(self, current_hands):
-        """ Constructor
-        Args:
-            callback (function): Function to call to set the hands to a specific value
-        """            
         # Fixed initialisation
         self.mode            = "Normal"
         self.clock_mode      = "Starting"
@@ -55,26 +51,15 @@ class DGUI:
         """
         return("{}({!r})".format(self.__class__.__name__, self.button1, self.button2, self.tft))
 
-    def text_centred(self, text, vpos, color = False):
-        """ Display some text centred on the screen
-
-        Args:
-            tft  (TFT display): The display to use
-            text (string)     : The text to display
-            vpos (int)        : The vertical position on the screen
-        """    
-        if not color:
-            color = self.tft.get_fg()
-
-        self.tft.text(120 - int(self.tft.textWidth(text)/2), vpos - int(self.tft.fontSize()[1]/2), text, color)
-
     def text_alignYX(self, text, vpos, hpos = False, align = 'Centre', color = False):
         """ Display some text on the screen
 
         Args:
-            tft  (TFT display): The display to use
-            text (string)     : The text to display
-            vpos (int)        : The vertical position on the screen
+            text  (string)    : The text to display
+            vpos  (int)       : The vertical position on the screen
+            hpos  (int)       : The horizontal position on the screen (defaults to edges/middle)
+            align (string)    : Left, Centre or Right
+            color (int)       : Colour code (0xffffff = black, 0x00ffff = red etc)
         """    
         if not color:
             color = self.tft.get_fg()
@@ -95,46 +80,6 @@ class DGUI:
                 hpos = 120
 
         self.tft.text(hpos - offset, vpos - self.tft.fontSize()[1] //2, text, color)
-
-    def text_right(self, text, vpos, color = False):
-        """ Display some text centred on the screen
-
-        Args:
-            tft  (TFT display): The display to use
-            text (string)     : The text to display
-            vpos (int)        : The vertical position on the screen
-        """    
-        if not color:
-            color = self.tft.get_fg()
-
-        self.tft.text(240 - int(self.tft.textWidth(text)), vpos - int(self.tft.fontSize()[1]/2), text, color)
-
-    def text_XY(self, text, hpos, vpos, color = False):
-        """ Display some text centred on the screen
-
-        Args:
-            tft  (TFT display): The display to use
-            text (string)     : The text to display
-            hpos (int)        : The horizontal position on the screen
-            vpos (int)        : The vertical position on the screen
-        """    
-        if not color:
-            color = self.tft.get_fg()
-
-        self.tft.text(hpos, vpos - int(self.tft.fontSize()[1]/2), text, color)
-
-    def text_left(self, text, vpos, color = False):
-        """ Display some text centred on the screen
-
-        Args:
-            tft  (TFT display): The display to use
-            text (string)     : The text to display
-            vpos (int)        : The vertical position on the screen
-        """    
-        if not color:
-            color = self.tft.get_fg()
-
-        self.tft.text(0, vpos - int(self.tft.fontSize()[1]/2), text, color) # Orange for buttons
 
     def handle_buttons(self):
         if not self.pressed_top and not self.pressed_bottom:
@@ -167,9 +112,34 @@ class DGUI:
             elif self.mode == "Stop":
                 self.mode = "Normal"
             elif self.mode == "Adjust":
-                self.setmode = (self.setmode + 1) % 4 # Modes are Current / HH:MM:00 / 12:00:00 / 6:00:00
+                self.setmode = (self.setmode + 1) % 14 # Modes are Current / HH:M5:00 / [1-12]:00:00
 
         return False
+
+    @property
+    def time_to_set(self):
+        return self.time_seq(self.setmode)
+
+    def time_seq(self, index):
+        if index % 14 == 0: 
+            # Current hand position - i.e. no change
+            return self.hands_tm
+        elif index % 14 == 1: 
+            # Current RTC time rounded up to the next easy five minutes
+            # Take current RTC, convert to mins past midnight aligned to 5 minute, 
+            # up to 7 minutes in the future, then convert to HH:MM making sure
+            # to stay in the range 1-12, not 0-11
+            now = self.rtc.now()
+            hm  = (((now[3]-1) * 60 + now[4] + 7) // 5) * 5       
+            return (0,0,0, (hm // 60) % 12 + 1, hm % 60, 0,0,0)   
+        else:
+            # Round to hours in the future (HH:00)
+            return (0,0,0, (self.current_h + index - 2) % 12 + 1, 0, 0, 0, 0)
+
+    def time_seq_pr(self, index):
+        tm = self.time_seq(index)
+
+        return "{:2d}:{:02d}:{:02d}".format(tm[3], tm[4], tm[5])
 
     def _doredraw(self):
         """ Clear and redraw the screen right now
@@ -246,72 +216,61 @@ class DGUI:
         
         # Show the current network config
         if not self.sta.active():
-            self.text_centred("WiFi not active", 38, 0x0088ff)                          # Amber
+            self.text_alignYX("WiFi not active",                     38, color = 0x0088ff)   # Amber
         elif not self.sta.isconnected():
-            self.text_centred(" WiFi not connected ", 38, 0x00ffff)                       # Red
+            self.text_alignYX(" WiFi not connected ",                38, color = 0x00ffff)   # Red
         else:
-            self.text_centred(" {} ".format(self.sta.ifconfig()[0]), 38, 0xff00ff)   # Green
+            self.text_alignYX(" {} ".format(self.sta.ifconfig()[0]), 38, color = 0xff00ff)   # Green
         
         # Tell the user whether the NTP sync is good or not
         if self.rtc.synced():
-            self.text_centred("NTP Sync OK", 60, 0xff00ff)                             # Green
+            self.text_alignYX("NTP Sync OK",                         60, color = 0xff00ff)   # Green
         else:
-            self.text_centred("No NTP Sync", 60, 0x0088ff)                             # Amber
+            self.text_alignYX("No NTP Sync",                          60, color = 0x0088ff)   # Amber
 
         now_tm   = self.rtc.now()
-        now_str  = "{:.0f}:{:02.0f}:{:02.0f}  ".format(now_tm[3], now_tm[4], now_tm[5])
-        hand_str = "{:.0f}:{:02.0f}:{:02.0f}  ".format(self.current_h, self.current_m, self.current_s)
+        now_str  = " {:.0f}:{:02.0f}:{:02.0f} ".format(now_tm[3], now_tm[4], now_tm[5])
+        hand_str = " {:.0f}:{:02.0f}:{:02.0f} ".format(self.current_h, self.current_m, self.current_s)
 
-        self.text_alignYX("Time:",                82, 110, 'Right')
-        self.text_alignYX(now_str,                82, 240, 'Right')
-        self.text_alignYX(self.clock_mode + ":", 104, 110, 'Right')
-        self.text_alignYX(hand_str,              104, 240, 'Right')
+        self.text_alignYX("Time:",                  82,  90, 'Right')
+        self.text_alignYX(now_str,                  82, 180, 'Centre')
+        self.text_alignYX(" "+self.clock_mode+":", 104,  90, 'Right')
+        self.text_alignYX(hand_str,                104, 180, 'Centre')
 
         self.text_alignYX(self.mode, 126, align = 'Right', color = 0x0088ff)   # UI mode
         self.text_alignYX("<INFO",   126, align = 'Left',  color = 0xff8800)   # Button label
 
     def drawscreen_info(self):
-        # Show the current network config
-        if not self.sta.active():
-            self.text_centred("WiFi not active", 38)
-        elif not self.sta.isconnected():
-            self.text_centred("WiFi not connected", 38)
-        else:
-            self.text_centred("WiFi {}".format(self.sta.ifconfig()[0]), 38)
-        
-        # Tell the user whether the NTP sync is good or not
-        if self.rtc.synced():
-            self.text_centred("NTP Sync OK", 104)
-        else:
-            self.text_centred("No NTP Sync", 104)
-
-        self.text_right(self.mode, 126, 0x0088ff)
-        self.text_left("<Back",      8, 0xff8800)
-        self.text_left("<STOP",    126, 0xff8800)
+        self.text_alignYX(self.mode, 126, align = 'Right', color = 0x0088ff)
+        self.text_alignYX("<Back",     8, align = 'Left',  color = 0xff8800)
+        self.text_alignYX("<STOP",   126, align = 'Left',  color = 0xff8800)
 
     def drawscreen_stop(self):
-        self.text_right(self.mode, 126, 0x0088ff)
-        self.text_left("<Adjust",    8, 0xff8800)
-        self.text_left("<Back",    126, 0xff8800)
+        self.text_alignYX(self.mode,  126, align = 'Right', color = 0x0088ff)
+        self.text_alignYX("<Adjust",    8, align = 'Left',  color = 0xff8800)
+        self.text_alignYX("<Back",    126, align = 'Left',  color = 0xff8800)
 
     def drawscreen_adjust(self):
-        self.text_centred("{}".format(self.setmode), 104)
 
-        self.text_right(self.mode, 126, 0x0088ff)
-        self.text_left("<Select",    8, 0xff8800)
-        self.text_left("<Change",  126, 0xff8800)
+        middle_colour = 0x000000 # White
 
-def set_hands_callback(value):
-    print("Request to set hands to {}".format(value))
+        if self.setmode == 0:
+            middle_colour = 0xff00ff # Make the supposedly correct hand position green
+            self.text_alignYX("Leave hands as-is", 38,                  color = 0xff00ff)
+            self.text_alignYX("<Abort  ",           8, align = 'Left',  color = 0xff00ff)
+        else:
+            self.text_alignYX("Set hands to...",   38,                  color = 0x00ffff)
+            self.text_alignYX("<Restart",           8, align = 'Left',  color = 0x00ffff)
 
-def dgdev():
-    ui  = DGUI(set_hands_callback)
-    cur = 0
+        self.text_alignYX(self.mode,  126, align = 'Right', color = 0x0088ff)
+        self.text_alignYX("<Change",  126, align = 'Left',  color = 0xff8800)
 
-    while True:
-        ui.update(cur)
-        sleep_ms(200)
-        cir += 1
+        self.text_alignYX("    {}    ".format(self.time_seq_pr(self.setmode - 1)),  60, color = 0x7f7f7f)
+        self.text_alignYX("--> {} <--".format(self.time_seq_pr(self.setmode    )),  82, color = middle_colour)
+        self.text_alignYX("    {}    ".format(self.time_seq_pr(self.setmode + 1)), 104, color = 0x7f7f7f)
+
+
+
 
 if __name__ == "dggui":
     dgdev()
