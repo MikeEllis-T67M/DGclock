@@ -45,7 +45,8 @@ def main():
 
     try:
         while True:
-            now = mktime(rtc.now())
+            now_tm = rtc.now()
+            now = now_tm[3] * 3600 + now_tm[4] * 60 + now_tm[5]
             
             # Move the clock forward if needed
             if ui.mode == 'Normal' or ui.mode == 'Info':
@@ -55,7 +56,8 @@ def main():
             ds.alarm1_tm = clock.hands_tm
 
             # Tell the UI where the clock thinks the hands are
-            ui.hands_tm = clock.hands_tm
+            ui.hands_tm   = clock.hands_tm
+            ui.clock_mode = clock.mode
 
             # Periodically re-sync the clocks
             if now > last_sync + 900:
@@ -73,8 +75,6 @@ def main():
         # Try to relinquish the I2C bus
         print("Hand position: {}".format(ds.alarm1_tm))
         i2c.deinit()
-        tft.deinit()
-        # del i2c
 
 if __name__ == "__main__":
     dgclock()
