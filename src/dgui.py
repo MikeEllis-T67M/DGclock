@@ -11,19 +11,27 @@ class DGUI:
         Args:
             callback (function): Function to call to set the hands to a specific value
         """            
+        # Fixed initialisation
         self.mode            = "Normal"
-        self.current_hands   = current_hands
+        self.clock_mode      = "Starting"
+        self.updated         = True         # New info needs to be displayed
+        self.redraw          = True         # The screen changes completely - clear and re-write
         self.setmode         = 0
         self.last_update     = 0
         self.pressed_top     = False
         self.pressed_bottom  = False
+
+        # Input parameter initialisation
+        self.current_h       = current_hands[3]
+        self.current_m       = current_hands[4]
+        self.current_s       = current_hands[5]
+
+        # Functional initialisation
         self.button1         = Pin( 0, Pin.IN, Pin.PULL_UP, handler = self._B1interrupt, trigger = Pin.IRQ_RISING) # Button released
         self.button2         = Pin(35, Pin.IN,              handler = self._B2interrupt, trigger = Pin.IRQ_RISING) # Button released
         self.tft             = display.TFT()
         self.rtc             = RTC()
         self.sta             = network.WLAN(network.STA_IF)
-        self.updated         = True         # New info needs to be displayed
-        self.redraw          = True         # The screen changes completely - clear and re-write
         
         # Configure the display
         tft = self.tft
@@ -60,6 +68,34 @@ class DGUI:
 
         self.tft.text(120 - int(self.tft.textWidth(text)/2), vpos - int(self.tft.fontSize()[1]/2), text, color)
 
+    def text_alignYX(self, text, vpos, hpos = False, align = 'Centre', color = False):
+        """ Display some text on the screen
+
+        Args:
+            tft  (TFT display): The display to use
+            text (string)     : The text to display
+            vpos (int)        : The vertical position on the screen
+        """    
+        if not color:
+            color = self.tft.get_fg()
+
+        if align == 'Left':
+            offset = 0
+        elif align == 'Right':
+            offset = self.tft.textWidth(text)
+        else: # Assume centre/center
+            offset = self.tft.textWidth(text) // 2
+
+        if not hpos:
+            if align == 'Left':
+                hpos = 0
+            elif align == 'Right':
+                hpos = 240
+            else: # Assume centre/center
+                hpos = 120
+
+        self.tft.text(hpos - offset, vpos - self.tft.fontSize()[1] //2, text, color)
+
     def text_right(self, text, vpos, color = False):
         """ Display some text centred on the screen
 
@@ -72,6 +108,20 @@ class DGUI:
             color = self.tft.get_fg()
 
         self.tft.text(240 - int(self.tft.textWidth(text)), vpos - int(self.tft.fontSize()[1]/2), text, color)
+
+    def text_XY(self, text, hpos, vpos, color = False):
+        """ Display some text centred on the screen
+
+        Args:
+            tft  (TFT display): The display to use
+            text (string)     : The text to display
+            hpos (int)        : The horizontal position on the screen
+            vpos (int)        : The vertical position on the screen
+        """    
+        if not color:
+            color = self.tft.get_fg()
+
+        self.tft.text(hpos, vpos - int(self.tft.fontSize()[1]/2), text, color)
 
     def text_left(self, text, vpos, color = False):
         """ Display some text centred on the screen
@@ -142,12 +192,24 @@ class DGUI:
 
     @property
     def hands_tm(self):
-        return self.current_hands
+        return (0, 0, 0, self.current_h, self.current_m, self.current_s, 0, 0)
         
     @hands_tm.setter
     def hands_tm(self, value):
-        self.current_hands = value
-        self.updated       = True
+        if self.current_h != value[3]:
+            if value[3] == 0:
+                self.current_h = 12
+            else:
+                self.current_h = value[3]
+            self.updated = True
+                
+        if self.current_m != value[4]:
+            self.current_m = value[4]
+            self.updated = True
+
+        if self.current_s != value[5]:
+            self.current_s = value[5]
+            self.updated = True
 
     def update_screen(self):
         """ Update the screen at any time, but don't repeatedly update the screen if nothing's changed.
@@ -163,26 +225,50 @@ class DGUI:
         self.redraw      = False
         self.updated     = False
 
+    ###############################################################################
+    ###############################################################################
+    # Draw screen function use the following row -> pixel conversion for text     #
+    #                                                                             #
+    # Row 0 - Top    : 8                                                          #
+    # Row 1          : 38                                                         #
+    # Row 2          : 60                                                         #
+    # Row 3          : 82                                                         #
+    # Row 4          : 104                                                        #
+    # Row 5 - Bottom : 126                                                        #
+    #                                                                             #
+    ###############################################################################
+    ###############################################################################
+
+
     def drawscreen_normal(self):
         # Title the display
-        self.text_centred("DG Clock", 8)
+        self.text_alignYX("DG Clock", 8)
         
         # Show the current network config
         if not self.sta.active():
             self.text_centred("WiFi not active", 38, 0x0088ff)                          # Amber
         elif not self.sta.isconnected():
-            self.text_centred("WiFi not connected", 38, 0x00ffff)                       # Red
+            self.text_centred(" WiFi not connected ", 38, 0x00ffff)                       # Red
         else:
-            self.text_centred("WiFi {}".format(self.sta.ifconfig()[0]), 38, 0xff00ff)   # Green
+            self.text_centred(" {} ".format(self.sta.ifconfig()[0]), 38, 0xff00ff)   # Green
         
         # Tell the user whether the NTP sync is good or not
         if self.rtc.synced():
-            self.text_centred("NTP Sync OK", 104, 0xff00ff)                             # Green
+            self.text_centred("NTP Sync OK", 60, 0xff00ff)                             # Green
         else:
-            self.text_centred("No NTP Sync", 104, 0x0088ff)                             # Amber
+            self.text_centred("No NTP Sync", 60, 0x0088ff)                             # Amber
 
-        self.text_right(self.mode, 126, 0x0088ff)
-        self.text_left("<INFO",    126, 0xff8800)
+        now_tm   = self.rtc.now()
+        now_str  = "{:.0f}:{:02.0f}:{:02.0f}  ".format(now_tm[3], now_tm[4], now_tm[5])
+        hand_str = "{:.0f}:{:02.0f}:{:02.0f}  ".format(self.current_h, self.current_m, self.current_s)
+
+        self.text_alignYX("Time:",                82, 110, 'Right')
+        self.text_alignYX(now_str,                82, 240, 'Right')
+        self.text_alignYX(self.clock_mode + ":", 104, 110, 'Right')
+        self.text_alignYX(hand_str,              104, 240, 'Right')
+
+        self.text_alignYX(self.mode, 126, align = 'Right', color = 0x0088ff)   # UI mode
+        self.text_alignYX("<INFO",   126, align = 'Left',  color = 0xff8800)   # Button label
 
     def drawscreen_info(self):
         # Show the current network config
