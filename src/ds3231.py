@@ -63,6 +63,36 @@ class DS3231:
 
     # -------------------------------------------------------------------------------------
     @staticmethod
+    def dayofweek_and_year(fullyear, month, day):
+        """ Calculate the daye of week and day of year for a given date
+
+        Args:
+            fullyear  (int): Range 1900-2099
+            month     (int): Range 1-12
+            day       (int): Range 1-31
+
+        Returns:
+            Tuple containing Day of Week (1..7, 1 = Sunday) and Day of Year (1..366, 1 = Jan 1st)
+        """
+        # Calculate constants for Zellers formula for day of week
+        zmonth = month - 2
+        if zmonth < 1:
+            zmonth   += 12
+            fullyear -= 1
+        zcentury = fullyear // 100
+        zyear    = fullyear % 100
+        dow      = 1 + (day + (13*zmonth - 1)//5 - 2*zcentury + zyear + zyear//4 + zcentury//4) % 7
+
+        # Use a similar congruence to determine the day of year
+        n1  = (275 * month) // 9                       # Approx DOY for LAST day of the month
+        n2  = (month + 9)   // 12                      # 0 for Jan/Feb, otherwise 1
+        n3  = 1 + (fullyear - 4*(fullyear//4) + 2)//3  # 1 for leap years, otherwise 2
+        doy = n1 - (n2 * n3) + day - 30                # Apply all the correction factors
+
+        return (dow, doy)
+
+    # -------------------------------------------------------------------------------------
+    @staticmethod
     def tm2dsrtc(tm):
         """ Convert tm format tuple into DS3231 RTC register format
         Args:
@@ -89,7 +119,7 @@ class DS3231:
             ds_format : bytearray(7) containing the DS format data
 
         Returns:
-            A mktime-compatible tuple. Day of week is as in the DS format message, and day of year is zero
+            A TM-format tuple. Day of week is as in the DS format message, and day of year is zero
         """
         second = DS3231.bcd2dec(ds_format[0])
         minute = DS3231.bcd2dec(ds_format[1])
@@ -105,7 +135,9 @@ class DS3231:
         if (ds_format[5] & 0x80) != 0:
             year += 100 # Update the year if the century bit is set
 
-        return utime.localtime(int(utime.mktime((year, month, date, hour, minute, second, 0, 0)))) # Fill in the day-of-week and day-of-year, andforce UTC conversion
+        dow, doy = DS3231.dayofweek_and_year(year, month, date)
+
+        return (year, month, date, hour, minute, second, dow, doy)
 
     # -------------------------------------------------------------------------------------
     @staticmethod
@@ -138,7 +170,12 @@ class DS3231:
             ds_format : bytearray(4) containing the DS format data
 
         Returns:
-            A mktime-compatible tuple. Day of week is as in the DS format message, and day of year is zero
+            A TM-format tuple representing the current Alarm1 setting
+            
+        Notes:
+            If the alarm is set for a day of week: date = 0,     day = 1..7
+            If the alarm is set for a date:        date = 1..31, day = 0
+            Day of year is always zero
         """        
         second = DS3231.bcd2dec(ds_format[0] & 0x7f) # Filter off the alarm mask bit
         minute = DS3231.bcd2dec(ds_format[1] & 0x7f) # Filter off the alarm mask bit
@@ -150,15 +187,12 @@ class DS3231:
         if ds_format[3] & 0x40: 
             # Alarm in "day of week" mode
             day    = DS3231.bcd2dec(ds_format[3] & 0x0f)     # Filter off the alarm mask bit.
-            date   = 0                                       # TM valid range is 1-31
+            date   = 0                                       # Signal that this ia DAY OF WEEK alarm
         else:
-            day    = 0                                       # Strictly speaking not correct
+            day    = 0                                       # Signal that this is a DATE alarm
             date   = DS3231.bcd2dec(ds_format[3] & 0x3f)     # Filter off the alarm mask and day/date mode bits
 
-        month  = 0
-        year   = 0
-
-        return (year, month, day, hour, minute, second, day, 0) # Build localtime format
+        return (0, 0, date, hour, minute, second, day, 0)    # Build TM format response
 
     # -------------------------------------------------------------------------------------
     def read_ds3231_rtc(self):
@@ -235,7 +269,8 @@ class DS3231:
         Args:
             time_to_set (number): Seconds since epoch
         """
-        self.alarm1_tm = utime.localtime(time_to_set)
+        self.alarm1_tm = (0, 0, 0, (time_to_set // 3600) % 24, (time_to_set // 60) % 60, time_to_set % 60, 0, 0)
+        #self.alarm1_tm = utime.localtime(time_to_set)
 
     # -------------------------------------------------------------------------------------
     @property
