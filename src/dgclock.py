@@ -11,16 +11,16 @@ class DGClock:
             config_filename (string): Name of the file to read
             hands           (int)   : The current hand position as seconds from 12:00:00
         """        
-        # Keep a copy of where the hands are pointing
-        #print("Initialising hands to {}".format(hands))
-        self.hands     = hands
-
         # Read the config file describing the pulse clock setup
         clock_settings = settings.load_settings(config_filename)
 
         # Initialise the actual pulse clock
-        self.pc   = pulseclock.PulseClock(clock_settings, hands % 2 == 0)
-        self.mode = "Wait"
+        self.pc = pulseclock.PulseClock(clock_settings, hands % 2 == 0)
+
+        # Keep a copy of where the hands are pointing
+        #print("Initialising hands to {}".format(hands))
+        self.hands = hands
+        self.mode  = "Wait"
 
     def __repr__(self):
         pass
@@ -35,14 +35,13 @@ class DGClock:
     @property
     def hands_tm(self):
         value = (0,0,0, (self._hands // 3600) % 24, (self._hands // 60) % 60, self._hands % 60, 0, 0) # TM structure YMDHMS00
-        #print("Hands read as : {} from {}".format(value, self._hands))
         return value
 
     @hands.setter
     def hands(self, value):
-        self._hands = int(value % 43200) # Must be an integer in the range 00:00:00 to 11:59:59
-        #print("Hands set to  : {}".format(self._hands))
-
+        self._hands    = int(value % 43200)       # Must be an integer in the range 00:00:00 to 11:59:59
+        self.pc.invert = self._hands % 2 == 0     # Make sure the pulse phase is correct
+        
     @hands_tm.setter
     def hands_tm(self, value):
         self.hands = value[3] * 3600 + value[4] * 60 + value[5]

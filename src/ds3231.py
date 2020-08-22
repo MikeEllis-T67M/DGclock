@@ -74,6 +74,42 @@ class DS3231:
         Returns:
             Tuple containing Day of Week (1..7, 1 = Sunday) and Day of Year (1..366, 1 = Jan 1st)
         """
+        return (DS3231.dayofweek(fullyear, month, day), DS3231.dayofyear(fullyear, month, day))
+
+    # -------------------------------------------------------------------------------------
+    @staticmethod
+    def dayofyear(fullyear, month, day):
+        """ Calculate the daye of week and day of year for a given date
+
+        Args:
+            fullyear  (int): Range 1900-2099
+            month     (int): Range 1-12
+            day       (int): Range 1-31
+
+        Returns:
+            Day of Year (1..366, 1 = Jan 1st)
+        """
+        # Use a similar congruence to determine the day of year
+        n1  = (275 * month) // 9                       # Approx DOY for LAST day of the month
+        n2  = (month + 9)   // 12                      # 0 for Jan/Feb, otherwise 1
+        n3  = 1 + (fullyear - 4*(fullyear//4) + 2)//3  # 1 for leap years, otherwise 2
+        doy = n1 - (n2 * n3) + day - 30                # Apply all the correction factors
+
+        return doy
+
+    # -------------------------------------------------------------------------------------
+    @staticmethod
+    def dayofweek(fullyear, month, day):
+        """ Calculate the daye of week and day of year for a given date
+
+        Args:
+            fullyear  (int): Range 1900-2099
+            month     (int): Range 1-12
+            day       (int): Range 1-31
+
+        Returns:
+            Day of Week (1..7, 1 = Sunday)
+        """
         # Calculate constants for Zellers formula for day of week
         zmonth = month - 2
         if zmonth < 1:
@@ -83,13 +119,64 @@ class DS3231:
         zyear    = fullyear % 100
         dow      = 1 + (day + (13*zmonth - 1)//5 - 2*zcentury + zyear + zyear//4 + zcentury//4) % 7
 
-        # Use a similar congruence to determine the day of year
-        n1  = (275 * month) // 9                       # Approx DOY for LAST day of the month
-        n2  = (month + 9)   // 12                      # 0 for Jan/Feb, otherwise 1
-        n3  = 1 + (fullyear - 4*(fullyear//4) + 2)//3  # 1 for leap years, otherwise 2
-        doy = n1 - (n2 * n3) + day - 30                # Apply all the correction factors
+        return dow
 
-        return (dow, doy)
+    # -------------------------------------------------------------------------------------
+    @staticmethod
+    def is_dst_from_UTCtm(tm):
+        year  = tm[0]
+        month = tm[1]
+        mday  = tm[2]
+        hour  = tm[3]
+
+        # Handle the easy cases first
+        if month < 3 or month > 10:    # Jan, Feb, Nov, Dec
+            return False # Never DST
+
+        if month > 3 and month < 10:   # Apr, May, Jun, Jul, Aug, Sep
+            return True # Always DST
+
+        # Now handle complex months - March and October
+
+        # What day of week is the last day of the month?
+        dow = DS3231.dayofweek(year, month, 31)
+
+        # Therefore which day of the month does the change happen on?
+        change_happens_on = 32 - dow
+
+        if mday > change_happens_on:   # Change has already happened
+            return month == 3            # It is DST afterwards in March, it isn't in October
+        elif mday < change_happens_on: # Change hasn't already happened
+            return month == 10           # It is DST before in October, it isn't in March
+
+        # We're on the day of the change then... is it before or after 1am?
+        if hour >= 1:                  # Is it after 0100 (UTC)?
+            return month == 3            # It is DST afterwards in March, it isn't in October
+        else:
+            return month == 10           # It is DST before in October, it isn't in March
+
+    @staticmethod
+    def timegm(tm):
+        """ Convert a TM tuple into a seconds-since-1970 timestamp, assuming UTC        
+
+        Args:
+            tm (tuple): Standard TM 8-tuple - DOW and DOY are ignored
+
+        Returns:
+            int: Seconds since 1st Jan 1970 00:00:00 assuming UTC
+        """
+        # Leading zero saves remembering that January is month 1 not month 0!
+        days_in_months = (0,0,31,59,90,120,151,181,212,243,273,304,334)
+
+        year, month, day, hour, minute, second = tm[:6]
+
+        # How many days in the years to Jan 1st this year?
+        # Magic number = 365.25 * 4, offset by 1 because 1970 wasn't a leap-year
+        days = ((year - 1970) * 1461 + 1) // 4 + days_in_months[month] + day - 1
+        if year % 4 == 0 and month > 2:
+            days += 1  # Correct for months 3-12 in leap-years
+
+        return 86400*days + 3600*hour + 60*minute + second 
 
     # -------------------------------------------------------------------------------------
     @staticmethod
@@ -222,10 +309,30 @@ class DS3231:
 
     # -------------------------------------------------------------------------------------
     @property
-    def rtc(self):
-        """ Read the DS3231 RTC and return the time as seconds since epoch
+    def rtc_tod_tm(self):
+        """ Read the DS3231 RTC and return the time as a TM tuple in UK LOCAL TIME
         """
-        return utime.mktime(self.rtc_tm)
+        return utime.gmtime(self.rtc_tod) # The only library function which works!
+
+    # -------------------------------------------------------------------------------------
+    @property
+    def rtc_tod(self):
+        """ Read the DS3231 RTC and return the time as a seconds count in UK LOCAL TIME
+        """
+        now     = self.rtc_tm
+        to_secs = DS3231.timegm(now)
+
+        if DS3231.is_dst_from_UTCtm(now):
+            to_secs += 3600 # Add one hour
+        
+        return to_secs
+
+    # -------------------------------------------------------------------------------------
+    @property
+    def rtc(self):
+        """ Read the DS3231 RTC and return the time as seconds since midnight
+        """
+        return DS3231.timegm(self.rtc_tm)
 
     # -------------------------------------------------------------------------------------
     @rtc.setter
@@ -235,7 +342,7 @@ class DS3231:
         Args:
             time_to_set (number): Seconds since epoch
         """
-        self.rtc_tm = utime.localtime(time_to_set)
+        self.rtc_tm = utime.gmtime(time_to_set)
 
     # -------------------------------------------------------------------------------------
     @property

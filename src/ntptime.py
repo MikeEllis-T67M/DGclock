@@ -7,14 +7,11 @@ try:
 except:
     import struct
 
-# (date(2000, 1, 1) - date(1900, 1, 1)).days * 24*60*60
-NTP_DELTA = 3155673600
+# NTP counts seconds from Jan 1st 1900, MicroPython uses 1970
+# (date(1970, 1, 1) - date(1900, 1, 1)).days * 24*60*60
+NTP_DELTA = 2208988800
 
-# The NTP host can be configured at runtime by doing: ntptime.host = 'myhost.org'
-host = "pool.ntp.org"
-#host = "192.168.16.10"
-
-def time():
+def ntp_query(host = "pool.ntp.org"):
     NTP_QUERY = bytearray(48)
     NTP_QUERY[0] = 0x1B
     addr = socket.getaddrinfo(host, 123)[0][-1]
@@ -24,12 +21,14 @@ def time():
         res = s.sendto(NTP_QUERY, addr)
         msg = s.recv(48)
         #print("Received: {}".format(msg))
+    except OSError: # Timeout
+        return None
     finally:
         s.close()
-    val = struct.unpack("!I", msg[40:44])[0]
-    #print("Converter {} to {}".format(msg[40:44], val))
-    return val - NTP_DELTA
 
+    val = struct.unpack("!I", msg[40:44])[0]
+    #print("Convert {} to {}".format(msg[40:44], val))
+    return val - NTP_DELTA # Convert from 1/1/1900 to 1/1/1970 EPOCH
 
 # There's currently no timezone support in MicroPython, so
 # utime.localtime() will return UTC time (as if it was .gmtime())

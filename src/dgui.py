@@ -1,7 +1,7 @@
 """ User Interface for the DG's clock
 """
 
-from machine import RTC, Pin
+from machine import Pin
 from utime   import mktime, sleep_ms
 import network
 import display
@@ -10,12 +10,12 @@ class DGUI:
         # Fixed initialisation
         self.mode            = "Normal"
         self.clock_mode      = "Starting"
-        self.updated         = True         # New info needs to be displayed
         self.redraw          = True         # The screen changes completely - clear and re-write
         self.setmode         = 0
-        self.last_update     = 0
         self.pressed_top     = False
         self.pressed_bottom  = False
+        self.now_tm          = (0,0,0,0,0,0,0,0)
+        self.ntp_sync        = False
 
         # Input parameter initialisation
         self.current_h       = current_hands[3]
@@ -26,7 +26,6 @@ class DGUI:
         self.button1         = Pin( 0, Pin.IN, Pin.PULL_UP, handler = self._B1interrupt, trigger = Pin.IRQ_RISING) # Button released
         self.button2         = Pin(35, Pin.IN,              handler = self._B2interrupt, trigger = Pin.IRQ_RISING) # Button released
         self.tft             = display.TFT()
-        self.rtc             = RTC()
         self.sta             = network.WLAN(network.STA_IF)
         
         # Configure the display
@@ -87,7 +86,6 @@ class DGUI:
         
         # Make sure the screen is redrawn next time around
         self.redraw  = True
-        self.updated = True
 
         # Simple state machine to got through Info -> Normal, Stop -> Adjust -> Normal
         if self.pressed_top: # Back button
@@ -125,11 +123,11 @@ class DGUI:
             # Current hand position - i.e. no change
             return self.hands_tm
         elif index % 14 == 1: 
-            # Current RTC time rounded up to the next easy five minutes
-            # Take current RTC, convert to mins past midnight aligned to 5 minute, 
+            # Current time rounded up to the next easy five minutes
+            # Take current displayed time, convert to mins past midnight aligned to 5 minute, 
             # up to 7 minutes in the future, then convert to HH:MM making sure
             # to stay in the range 1-12, not 0-11
-            now = self.rtc.now()
+            now = self.now_tm
             hm  = (((now[3]-1) * 60 + now[4] + 7) // 5) * 5       
             return (0,0,0, (hm // 60) % 12 + 1, hm % 60, 0,0,0)   
         else:
@@ -171,11 +169,11 @@ class DGUI:
                 self.current_h = 12
             else:
                 self.current_h = value[3]
-            self.updated = True
+            self.redraw = True
                 
         if self.current_m != value[4]:
             self.current_m = value[4]
-            self.updated = True
+            self.redraw = True
 
         if self.current_s != value[5]:
             self.current_s = value[5]
@@ -184,16 +182,12 @@ class DGUI:
     def update_screen(self):
         """ Update the screen at any time, but don't repeatedly update the screen if nothing's changed.
         """
-        now = mktime(self.rtc.now())
-        
         if self.redraw:
             self._doredraw()
-        elif self.updated or now > self.last_update:
+        else:
             self._doupdate()
 
-        self.last_update = now
         self.redraw      = False
-        self.updated     = False
 
     ###############################################################################
     ###############################################################################
@@ -223,13 +217,12 @@ class DGUI:
             self.text_alignYX(" {} ".format(self.sta.ifconfig()[0]), 38, color = 0xff00ff)   # Green
         
         # Tell the user whether the NTP sync is good or not
-        if self.rtc.synced():
+        if self.ntp_sync:
             self.text_alignYX("NTP Sync OK",                         60, color = 0xff00ff)   # Green
         else:
             self.text_alignYX("No NTP Sync",                          60, color = 0x0088ff)   # Amber
 
-        now_tm   = self.rtc.now()
-        now_str  = " {:.0f}:{:02.0f}:{:02.0f} ".format(now_tm[3], now_tm[4], now_tm[5])
+        now_str  = " {:02.0f}:{:02.0f}:{:02.0f} ".format(self.now_tm[3], self.now_tm[4], self.now_tm[5])
         hand_str = " {:.0f}:{:02.0f}:{:02.0f} ".format(self.current_h, self.current_m, self.current_s)
 
         self.text_alignYX("Time:",                  82,  90, 'Right')

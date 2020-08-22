@@ -59,6 +59,15 @@ Basic version of the main thread now working - pulses the clock fast if it is be
   * Hand position - and ensure the pulse polarity is adjusted correctly
 * Handle leap seconds (more) elegantly {???}
 
+## Timezone info
+
+Looks like the MicroPython NTP sync assumes TZ+1 at all times :-( More work needed to unpick this
+
+  https://forum.micropython.org/viewtopic.php?f=2&t=4034
+  https://forum.micropython.org/viewtopic.php?t=3675
+
+  Yuck - looks like Loboris Micropython DOES correctly convert from NTP to ToD in the UK timezone - except that the conversion is done a week late this year! Is it that it gets it wrong when 31st October is a Saturday? Or does it always do it on the first Sunday in November? Looks like that's it. Checked 2020 and 2021. Argh!!!!
+
 ### DS3231 class
 
 **None of these are critical for this application**
