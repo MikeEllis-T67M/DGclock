@@ -38,6 +38,9 @@ class DGUI:
         tft.set_bg(0xffffff)     # Should be black
         tft.set_fg(0x000000)     # Should be white
         tft.clear()
+        self.text_alignYX("DG Clock", 8)
+        self.text_alignYX("Initialising...", 60)
+        self.text_alignYX("Please wait",    104)
 
     def _B1interrupt(self, pin):
         self.pressed_top = True
@@ -91,7 +94,7 @@ class DGUI:
         if self.pressed_top: # Back button
             self.pressed_top = False # Acknowledge the button press
             self.pressed_bottom = False # Both buttons at the same time not allowed
-            if self.mode == "Info":
+            if self.mode == "Set":
                 self.mode = "Normal"
             elif self.mode == "Stop":
                 self.mode = "Adjust"
@@ -104,8 +107,8 @@ class DGUI:
         if self.pressed_bottom:
             self.pressed_bottom = False # Acknowledge the button press
             if self.mode == "Normal":
-                self.mode = "Info"
-            elif self.mode == "Info":
+                self.mode = "Set"
+            elif self.mode == "Set":
                 self.mode = "Stop"
             elif self.mode == "Stop":
                 self.mode = "Normal"
@@ -148,8 +151,8 @@ class DGUI:
     def _doupdate(self):
         """ Do update the screen immediately
         """
-        if self.mode == "Info":
-            self.drawscreen_info()
+        if self.mode == "Set":
+            self.drawscreen_setting()
         elif self.mode == "Stop":
             self.drawscreen_stop()
         elif self.mode == "Adjust":
@@ -230,18 +233,32 @@ class DGUI:
         self.text_alignYX(" "+self.clock_mode+":", 104,  90, 'Right')
         self.text_alignYX(hand_str,                104, 180, 'Centre')
 
-        self.text_alignYX(self.mode, 126, align = 'Right', color = 0x0088ff)   # UI mode
-        self.text_alignYX("<INFO",   126, align = 'Left',  color = 0xff8800)   # Button label
+        self.text_alignYX(self.mode,    126, align = 'Right', color = 0x0088ff)   # UI mode
+        self.text_alignYX("<Setting",   126, align = 'Left',  color = 0xff8800)   # Button label
 
-    def drawscreen_info(self):
-        self.text_alignYX(self.mode, 126, align = 'Right', color = 0x0088ff)
+    def drawscreen_setting(self):
         self.text_alignYX("<Back",     8, align = 'Left',  color = 0xff8800)
+
+        hand_str = " {:.0f}:{:02.0f}:{:02.0f} ".format(self.current_h, self.current_m, self.current_s)
+        self.text_alignYX("Press STOP if the", 38)
+        self.text_alignYX("hands need to",     60)
+        self.text_alignYX("be adjusted",       82)
+        self.text_alignYX(hand_str,  104)
+
         self.text_alignYX("<STOP",   126, align = 'Left',  color = 0xff8800)
+        self.text_alignYX(self.mode, 126, align = 'Right', color = 0x0088ff)
 
     def drawscreen_stop(self):
-        self.text_alignYX(self.mode,  126, align = 'Right', color = 0x0088ff)
-        self.text_alignYX("<Adjust",    8, align = 'Left',  color = 0xff8800)
+        self.text_alignYX("<Other",    8, align = 'Left',  color = 0xff8800)
+
+        hand_str = " {:.0f}:{:02.0f}:{:02.0f} ".format(self.current_h, self.current_m, self.current_s)
+        self.text_alignYX("Hands STOPPED", 38, color = 0x0088ff)
+        self.text_alignYX("You can adjust them",   60)
+        self.text_alignYX("to show "+hand_str, 82)
+        self.text_alignYX("or press Other", 104, color = 0x00ffff)
+
         self.text_alignYX("<Back",    126, align = 'Left',  color = 0xff8800)
+        self.text_alignYX(self.mode,  126, align = 'Right', color = 0x0088ff)
 
     def drawscreen_adjust(self):
 

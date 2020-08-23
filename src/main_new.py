@@ -19,9 +19,9 @@ def align_clocks(rtc, ds):
         rtc.init(ds.rtc_tm) # Otherwise copy from the DS to the RTC
 
 def main():
-    # Connect to the WiFi 
-    wifi_settings = settings.load_settings("wifi.json")
-    ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
+    # LED output - turn it on whilst we're booting...
+    led = Pin(2, Pin.OUT)
+    led.value(1)
 
     # Initialise the DS3231 battery-backed RTC
     i2c = I2C(0, scl=22, sda=21)
@@ -29,18 +29,22 @@ def main():
     print("DS3231 time   : {}".format(ds.rtc_tm))
     print("Hands position: {}".format(ds.alarm1_tm))
 
+    # Initialise the mechanical clock
+    clock = dgclock.DGClock("clock.json", ds.alarm1) # Read the config file, and initialise hands at last known position
+
+    # Intialise the display
+    ui = dgui.DGUI(clock.hands_tm)
+
+    # Connect to the WiFi 
+    wifi_settings = settings.load_settings("wifi.json")
+    ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
+
     # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
     ntp_settings = settings.load_settings("ntp.json")
     #rtc = RTC()
     #rtc.init(ds.rtc_tm)
     #print("RTC set to    : {}".format(rtc.now()))
     #rtc.ntp_sync(ntp_settings['NTP'], update_period = 900)
-
-    # Initialise the mechanical clock
-    clock = dgclock.DGClock("clock.json", ds.alarm1) # Read the config file, and initialise hands at last known position
-
-    # Intialise the display
-    ui = dgui.DGUI(clock.hands_tm)
 
     # Initialise "not too often" counters
     next_ntp_sync = last_update = ds.rtc
@@ -51,8 +55,22 @@ def main():
             ui.now_tm = ds.rtc_tod_tm
 
             # Move the clock to show current TOD unless stopped
-            if ui.mode == 'Normal' or ui.mode == 'Info':
+            if ui.mode == 'Normal' or ui.mode == 'Set':
                 clock.move(ds.rtc_tod)
+
+            # LED states
+            if clock.mode == "Run" and ui.now_tm[3] == 23 and ui.now_tm[4] == 0:
+                # Run mode  - on at 22:00:00 until 22:01:00
+                led.value(1)
+            elif clock.mode == "Wait":
+                # Wait mode - on
+                led.value(1)
+            elif clock.mode == "Fast" and clock.hands_tm[5] % 2 == 0:
+                # Fast mode - on for even seconds
+                led.value(1)
+            else:
+                # Otherwise off
+                led.value(0)
 
             # Update the non-volatile copy of the hand position
             ds.alarm1_tm  = clock.hands_tm
@@ -79,7 +97,7 @@ def main():
                 else:
                     ui.ntp_sync   = False
                     next_ntp_sync = ds.rtc + 321 # Just a bit more than five minutes
-                    print("NTP sync failed at  {}".format(now_tmtod))
+                    print("NTP sync failed at  {}".format(ui.now_tm))
 
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus

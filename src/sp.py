@@ -1,22 +1,21 @@
 from machine import I2C, RTC, Pin
 from network import WLAN, AP_IF, STA_IF
 import ds3231
-import settings
-import ntptime
-import wifi
-
-wifi_settings = settings.load_settings("wifi.json")
-ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
-
 i2c = I2C(0, scl=22, sda=21)
 ds = ds3231.DS3231(i2c)
 rtc = RTC()
 ds.alarm1_tm
 ds.rtc_tm
+
+import settings
+import wifi
+wifi_settings = settings.load_settings("wifi.json")
+ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
+
+import ntptime
 ntp_settings = settings.load_settings("ntp.json")
 ntptime.ntp_query("192.168.16.10")
 ds.rtc
-
 
 import dgclock
 clock = dgclock.DGClock("clock.json", ds.alarm1)
