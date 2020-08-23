@@ -14,9 +14,13 @@ NTP_DELTA = 2208988800
 def ntp_query(host = "pool.ntp.org"):
     NTP_QUERY = bytearray(48)
     NTP_QUERY[0] = 0x1B
-    addr = socket.getaddrinfo(host, 123)[0][-1]
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
+        addr = socket.getaddrinfo(host, 123)[0][-1]
+    except:
+        return None
+    
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(1)
         res = s.sendto(NTP_QUERY, addr)
         msg = s.recv(48)

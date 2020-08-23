@@ -12,17 +12,25 @@ def connect_sta(ssid, password, hostname):
     Returns:
         string: The IP address
     """   
-    sta_if = network.WLAN(network.STA_IF)
-    if not sta_if.isconnected():
-        print('connecting to network...')
-        sta_if.active(True)
-        sleep_ms(100)
-        sta_if.config(dhcp_hostname=hostname)
-        sta_if.connect(ssid, password)
-        while not sta_if.isconnected():
+    try:
+        sta_if = network.WLAN(network.STA_IF)
+        if not sta_if.isconnected():
+            print('connecting to network...')
+            sta_if.active(True)
             sleep_ms(100)
+            sta_if.config(dhcp_hostname=hostname)
+            sta_if.connect(ssid, password)
+            tries = 1
+            while not sta_if.isconnected() and tries < 5:
+                sleep_ms(100)
+                tries += 1
+    except:
+        pass # If no WiFi, gracefully fail
 
-    return sta_if.ifconfig()[0]
+    if sta_if.isconnected():
+        return sta_if.ifconfig()[0]
+    else:
+        return None
 
 def setup_ap(ssid, password, hostname):
     ap_if = network.WLAN(network.AP_IF)
