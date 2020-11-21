@@ -28,7 +28,10 @@ def ntp_query(host = "pool.ntp.org"):
     except OSError: # Timeout
         return None
     finally:
-        s.close()
+        try:
+            s.close() # TODO: Can sometimes fail with "local variable referenced before assignment"...???
+        except Exception:
+            pass
 
     val = struct.unpack("!I", msg[40:44])[0]
     #print("Convert {} to {}".format(msg[40:44], val))

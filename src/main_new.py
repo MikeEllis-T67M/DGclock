@@ -2,6 +2,7 @@ from machine import I2C, Pin, RTC
 from utime import sleep_ms, time, mktime
 import ujson
 import display
+import gc
 
 import ds3231
 import dgclock
@@ -98,6 +99,8 @@ def main():
                     ui.ntp_sync   = False
                     next_ntp_sync = ds.rtc + 321 # Just a bit more than five minutes
                     print("NTP sync failed at  {}".format(ui.now_tm))
+            else:
+                gc.collect()
 
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus
