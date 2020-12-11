@@ -2,6 +2,7 @@
 	"Plus": 	  26,
 	"Minus": 	  25,
 	"Enable": 	  27,
+	"Sense":      36,
 	"Pulse": 	  250,
 	"PulseCount": 1,
 	"Dwell": 	  0,

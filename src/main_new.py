@@ -90,11 +90,12 @@ def main():
             # Periodically re-sync the clocks
             if ds.rtc > next_ntp_sync:
                 ntp_time  = ntptime.ntp_query(ntp_settings['NTP'])
+                old_time  = ds.rtc
                 if ntp_time is not None:
-                    ds.rtc        = ntp_time
+                    ds.rtc        = ntp_time        # Copy the received time into the RTC as quickly as possible to minimise error
                     next_ntp_sync = ntp_time + 3654 # Just a bit less than once an hour
                     ui.ntp_sync   = True
-                    print("Synced RTC to NTP - {}".format(ds.rtc_tod_tm))
+                    print("Synced RTC to NTP - {} (delta {})".format(ds.rtc_tod_tm, old_time - ntp_time))
                 else:
                     ui.ntp_sync   = False
                     next_ntp_sync = ds.rtc + 321 # Just a bit more than five minutes

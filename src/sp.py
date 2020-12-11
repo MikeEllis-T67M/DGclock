@@ -1,3 +1,8 @@
+Last NTP check started at 1605987450 (21st November)
+Check at   1607715597 when DS3231 read 1607715599
+Drift was 2 in 1728147 secs: 1.15730895577749ppm  (11th December)
+Cal factor adjusted to -12 (== -1.2ppm)
+
 from machine import I2C, RTC, Pin
 from network import WLAN, AP_IF, STA_IF
 import ds3231
@@ -80,3 +85,34 @@ def timegm(tuple):
     minutes = hours*60 + minute
     seconds = minutes*60 + second
     return seconds
+
+
+from machine import Pin
+
+count = 0
+def irq(pin):
+    count += 1
+
+
+sense = Pin(38, Pin.IN, handler = irq, trigger = Pin.IRQ_RISING | Pin.IRQ_FALLING)
+
+Expect: 01  Sense: 0 Edges: 0
+Expect: 02  Sense: 0 Edges: 3      3
+Expect: 03  Sense: 0 Edges: 8      5
+Expect: 04  Sense: 1 Edges: 14     6
+Expect: 05  Sense: 0 Edges: 19     5
+Expect: 06  Sense: 0 Edges: 25     6
+Expect: 07  Sense: 0 Edges: 30     5
+Expect: 08  Sense: 1 Edges: 36     6
+Expect: 09  Sense: 0 Edges: 41     5
+Expect: 10  Sense: 0 Edges: 47     6
+Expect: 11  Sense: 0 Edges: 52     5
+Expect: 12  Sense: 1 Edges: 58     6
+Expect: 13  Sense: 0 Edges: 63     5
+Expect: 14  Sense: 0 Edges: 69     6
+Expect: 15  Sense: 0 Edges: 74     5
+Expect: 16  Sense: 1 Edges: 79     5
+Expect: 17  Sense: 0 Edges: 83     4
+Expect: 18  Sense: 0 Edges: 89     6
+Expect: 19  Sense: 0 Edges: 94     5
+
