@@ -16,22 +16,19 @@ class PulseClock:
         self.sensor     = Pin(config["Sense"],  Pin.IN,  handler = self._sensorinterrupt, trigger = Pin.IRQ_RISING | Pin.IRQ_FALLING)
         self.sec_pos    = second_hand_position % 60
 
-        # Initialise the position sensor
-        self.polarity   = 0
+        # Initialise the position sensor and error counters
+        self.polarity   = 1
         self.edgecount  = 0
         self.maxcount   = 0
         self.mincount   = 100
+        self.countzero  = 0
         
         self.step()         # Ensure the mechanism is fully aligned not in some midway state
-        self.polarity   = 0 # Reset the polarity flip-flop - 0 pulses on start-up is common
-        self.maxcount   = 0 # Reset the min/max in case the first step wasn't a truly valid step
-        self.mincount   = 100
-
+        
     def __repr__(self):
         """Returns representation of the object
         """
-        return "{}({!r})".format(self.__class__.__name__, self.pin_plus, self.pin_minus, self.pin_enable, 
-                                self.config, self.sensor, self.sense_edgecount)
+        return "{}({!r})".format(self.__class__.__name__, self.pin_plus, self.pin_minus, self.pin_enable, self.config, self.sensor)
 
     def _sensorinterrupt(self, pin):
         """ Sensor interrupt routine
@@ -96,13 +93,21 @@ class PulseClock:
             self.mincount = count
 
         # Update where the second hand SHOULD be - if it didn't move, don't update at all
-        if 0 == count: # No edges detected - clock jammed!
-            self.polarity = 1-self.polarity
-            print("No pulses! Inverting polarity - now {}".format(self.polarity))
-        elif 0 < count and count < 8: # 1-7 edges is probably a single step
+        if 0 == count: # No edges detected - clock jammed! Try kicking it the other way in future...
+            print("No pulses!")
+            self.countzero += 1
+            if self.countzero % 4 == 0: # Got four zeros in a row - flipping the polarity just in case that helps
+                self.polarity = 1-self.polarity
+                print("Inverting polarity - now {}".format(self.polarity))
+        else:
+            self.countzero = 0 # Got some motion - reset the zero counter
+
+        # 1-7 edges is probably a single step
+        if 0 < count and count <= 8: 
             self.sec_pos += 1
-        else: # Too many edges - assume the clock skipped forward by multiple seconds
-            # Try to guess how many seconds were skipped, but err on the high side because the white sector will always round down
+        
+        # Far too many edges - assume the clock skipped forward by multiple seconds - try to guess how many...
+        if 8 < count: 
             self.sec_pos += count // 4
             print("Got {} pulses - sec hand position adjusted by +{}".format(count, (count // 4)-1))
 
