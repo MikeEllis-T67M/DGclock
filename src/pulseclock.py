@@ -17,13 +17,13 @@ class PulseClock:
         self.sec_pos    = second_hand_position % 60
 
         # Initialise the position sensor
+        self.polarity   = 0
         self.edgecount  = 0
         self.maxcount   = 0
         self.mincount   = 100
-        #self.sense_edgecount = ((second_hand_position * 6) + (second_hand_position % 4)) // 4 # There are six edges for every four seconds
         
-        self.step() # Ensure the mechanism is fully aligned not in some midway state
-
+        self.step()         # Ensure the mechanism is fully aligned not in some midway state
+        self.polarity   = 0 # Reset the polarity flip-flop - 0 pulses on start-up is common
         self.maxcount   = 0 # Reset the min/max in case the first step wasn't a truly valid step
         self.mincount   = 100
 
@@ -97,29 +97,30 @@ class PulseClock:
 
         # Update where the second hand SHOULD be - if it didn't move, don't update at all
         if 0 == count: # No edges detected - clock jammed!
-            pass
+            self.polarity = 1-self.polarity
+            print("No pulses! Inverting polarity - now {}".format(self.polarity))
         elif 0 < count and count < 8: # 1-7 edges is probably a single step
             self.sec_pos += 1
         else: # Too many edges - assume the clock skipped forward by multiple seconds
             # Try to guess how many seconds were skipped, but err on the high side because the white sector will always round down
-            self.sec_pos += count // 4 
+            self.sec_pos += count // 4
+            print("Got {} pulses - sec hand position adjusted by +{}".format(count, (count // 4)-1))
 
         # Make sure that the seconds counter remains in the range 0-59
         self.sec_pos %= 60
         
-        # Check that the currently being read value matches the expected state
-        if state == 1: # White for positions 0, 4, 8, 12, ... only
-            if self.sec_pos % 4 != 0:
-                print("Hand mis-alignment detected - White at {} seconds - adjusted".format(self.sec_pos))
-                self.sec_pos -= self.sec_pos % 4
-        else:
-            if self.sec_pos % 4 == 0:
-                print("Hand mis-alignment detected - Black at {} seconds".format(self.sec_pos))
+        if state == 1 and self.sec_pos % 4 != 0: # White when it shouldn't be!
+            print("counted {} pulses - hand at {:02d} - sensor White".format(count, self.sec_pos))
+        
+        if state == 0 and self.sec_pos % 4 == 0: # Black when it shouldn't be!
+            print("counted {} pulses - hand at {:02d} - sensor black".format(count, self.sec_pos))
 
-        #if state == 1:
-        #    print("Counted {} pulses - hand at {:02d} - sensor White (min/max {}/{})".format(count, self.sec_pos, self.mincount, self.maxcount))
-        #else:
-        #    print("Counted {} pulses - hand at {:02d} - sensor black (min/max {}/{})".format(count, self.sec_pos, self.mincount, self.maxcount))
+        if self.sec_pos == 59:
+            print("Min/max pulses {}/{}".format(self.mincount, self.maxcount))
+            self.mincount = 100
+            self.maxcount = 0
+
+        # TODO - Add code to check for early/missed white sectors
 
     def read_secondhand(self):
         """ Report where the second hand SHOULD be
@@ -129,19 +130,23 @@ class PulseClock:
     def step(self):
         """ Step the clock forward by one second
         """
-        if self.sec_pos % 2: # Determine the polarity of the pulse based upon the nominal current clock position
+        if self.sec_pos % 2 == self.polarity: # Determine the polarity of the pulse based upon the nominal current clock position
             self._dostep(self.pin_minus, self.pin_plus, self.pin_enable)
+            #print("Positive pulse - ", end='')
         else:
             self._dostep(self.pin_plus, self.pin_minus, self.pin_enable)
+            #print("Negative pulse - ", end='')
         
         self._update()
 
     def faststep(self):
         """ Step the clock forward by one second
         """
-        if self.sec_pos % 2: # Determine the polarity of the pulse based upon the nominal current clock position
+        if self.sec_pos % 2 == self.polarity: # Determine the polarity of the pulse based upon the nominal current clock position
             self._dofaststep(self.pin_minus, self.pin_plus, self.pin_enable)
+            #print("Positive fast pulse - ", end='')
         else:
             self._dofaststep(self.pin_plus, self.pin_minus, self.pin_enable)
+            #print("Negative fast pulse - ", end='')
         
         self._update()

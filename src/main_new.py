@@ -54,13 +54,14 @@ def main():
         while True:
             # Tell the UI what the time is
             ui.now_tm = ds.rtc_tod_tm
+            now       = ds.rtc_tod
 
             # Move the clock to show current TOD unless stopped
             if ui.mode == 'Normal' or ui.mode == 'Set':
-                clock.move(ds.rtc_tod)
+                clock.move(now)
 
             # LED states
-            if clock.mode == "Run" and ui.now_tm[3] == 23 and ui.now_tm[4] == 0:
+            if clock.mode == "Run" and ui.now_tm[3] == 22 and ui.now_tm[4] == 0:
                 # Run mode  - on at 22:00:00 until 22:01:00
                 led.value(1)
             elif clock.mode == "Wait":
@@ -75,6 +76,7 @@ def main():
 
             # Update the non-volatile copy of the hand position
             ds.alarm1_tm  = clock.hands_tm
+            sleep_ms(10) # Allow time for this to complete
 
             # Tell the UI where the clock thinks the hands are
             ui.hands_tm   = clock.hands_tm
