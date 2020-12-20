@@ -142,13 +142,15 @@ class PulseClock:
         if state == 1:                                     # Detecting white
             if self.sec_pos % 4 == self.whitephase:          # White is in the "expected" phase
                 self.whitecount += 1
+                if self.whitephase != 0:
+                    print("Unexpected white #{} (second {} phase {})".format(self.whitecount, self.sec_pos, self.whitephase))
             else:
                 self.whitephase = self.sec_pos % 4           # White appears to be consistently in the same position
                 self.whitecount = 0
-                print("Unexpected white #{} (phase {})".format(self.whitecount, self.whitephase))
+                print("Unexpected white #{} (second {} phase {})".format(self.whitecount, self.sec_pos, self.whitephase))
 
             if self.whitecount > 15 and self.whitephase != 0: # OK, we've seen more than 15 whites when we shouldn't have done
-                print("Adjusting second hand by {}".format(self.whitephase))
+                print("Adjusting second hand by {} - from {} to {}".format(self.whitephase,self.sec_pos,self.sec_pos - self.whitephase))
                 self.sec_pos -= self.whitephase # Move the second hand position back to make the phase align
                 self.whitephase = 0
                 self.whitecount = 0
