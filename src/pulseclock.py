@@ -91,13 +91,13 @@ class PulseClock:
         (count, self.edgecount, state) = (self.edgecount, 0, self.sensor.value()) # Copy the count and then reset it - semi-atomic!
 
         # Debug: construct a record and print it once per minute
-        if state == 1: # Recording seeing white
-            self.record += "-" # Use a dash for whites since it is easier to scan in the resulting log
-
         if count < 10: # Record the number of pulses we got to get to this state
             self.record += str(count)
         else:
             self.record += " "+str(count)+" "
+
+        if state == 1: # Recording seeing white
+            self.record += "-" # Use a dash for whites since it is easier to scan in the resulting log
 
         if count > self.maxcount:
             self.maxcount = count
@@ -141,7 +141,7 @@ class PulseClock:
                 else:
                     print("White phase restored (second {})".format(self.sec_pos))
 
-            if self.whitecount > 15 and self.whitephase != 0: # OK, we've seen more than 15 whites when we shouldn't have done
+            if self.whitecount > 4 and self.whitephase != 0: # OK, we've seen more than 15 whites when we shouldn't have done
                 print("Adjusting second hand by {} - from {} to {}".format(self.whitephase,self.sec_pos,self.sec_pos - self.whitephase))
                 self.sec_pos -= self.whitephase # Move the second hand position back to make the phase align
                 if self.whitephase % 2 == 1: # If it's an odd-even change then we also need to flip the polarity...
@@ -149,7 +149,7 @@ class PulseClock:
                 self.whitephase = 0
                 self.whitecount = 0
 
-        if self.sec_pos == 59: # Print the debugging at the end of each minute
+        if self.sec_pos == 0: # Print the debugging at the top of each minute
             print("Min/max pulses {}/{}: {}".format(self.mincount, self.maxcount, self.record))
             self.mincount = 100
             self.maxcount = 0
