@@ -88,12 +88,13 @@ class PulseClock:
     def _update(self):
         """ Update the internal hand position reporting - should ONLY be called when stepping the clock
         """
-        (state, count, self.edgecount) = (self.sensor.value(), self.edgecount, 0) # Copy the count and then reset it - semi-atomic!
+        (count, self.edgecount, state) = (self.edgecount, 0, self.sensor.value()) # Copy the count and then reset it - semi-atomic!
 
-        if state == 1:
-            self.record += "W"
+        # Debug: construct a record and print it once per minute
+        if state == 1: # Recording seeing white
+            self.record += "-" # Use a dash for whites since it is easier to scan in the resulting log
 
-        if count < 10:
+        if count < 10: # Record the number of pulses we got to get to this state
             self.record += str(count)
         else:
             self.record += " "+str(count)+" "
@@ -114,40 +115,31 @@ class PulseClock:
         else:
             self.countzero = 0 # Got some motion - reset the zero counter
 
-        # 1-8 edges is probably a single step
-        if 0 < count and count <= 8: 
+        # 1-9 edges is probably a single step
+        if 0 < count and count <= 9: 
             self.sec_pos += 1
         
-        # Far too many edges - assume the clock skipped forward by multiple seconds - try to guess how many...
-        if 8 < count: 
-            self.sec_pos += count // 4
-            print("Got {} pulses - sec hand position adjusted by +{}".format(count, (count // 4)-1))
+        # More than 9 edges - assume the clock skipped forward by multiple seconds - try to guess how many...
+        if 9 < count: 
+            self.sec_pos += count // 5
+            print("Got {} pulses - sec hand position adjusted by +{}".format(count, count // 5)
 
         # Make sure that the seconds counter remains in the range 0-59
         self.sec_pos %= 60
         
-        if state == 1 and self.sec_pos % 4 != 0: # White when it shouldn't be!
-            print("counted {} pulses - hand at {:02d} - sensor White".format(count, self.sec_pos))
-        
-        if state == 0 and self.sec_pos % 4 == 0: # Black when it shouldn't be!
-            print("counted {} pulses - hand at {:02d} - sensor black".format(count, self.sec_pos))
-
-        if self.sec_pos == 59:
-            print("Min/max pulses {}/{}: {}".format(self.mincount, self.maxcount, self.record))
-            self.mincount = 100
-            self.maxcount = 0
-            self.record   = ""
-
         # TODO - Add code to check for early/missed white sectors
         if state == 1:                                     # Detecting white
             if self.sec_pos % 4 == self.whitephase:          # White is in the "expected" phase
                 self.whitecount += 1
                 if self.whitephase != 0:
-                    print("Unexpected white #{} (second {} phase {})".format(self.whitecount, self.sec_pos, self.whitephase))
+                    print("Offset white     #{} (second {} phase {})".format(self.whitecount, self.sec_pos, self.whitephase))
             else:
                 self.whitephase = self.sec_pos % 4           # White appears to be consistently in the same position
                 self.whitecount = 0
-                print("Unexpected white #{} (second {} phase {})".format(self.whitecount, self.sec_pos, self.whitephase))
+                if self.whitephase != 0:
+                    print("Unexpected white #{} (second {} phase {})".format(self.whitecount, self.sec_pos, self.whitephase))
+                else:
+                    print("White phase restored (second {})".format(self.sec_pos))
 
             if self.whitecount > 15 and self.whitephase != 0: # OK, we've seen more than 15 whites when we shouldn't have done
                 print("Adjusting second hand by {} - from {} to {}".format(self.whitephase,self.sec_pos,self.sec_pos - self.whitephase))
@@ -156,6 +148,12 @@ class PulseClock:
                     self.polarity = 1-self.polarity
                 self.whitephase = 0
                 self.whitecount = 0
+
+        if self.sec_pos == 59: # Print the debugging at the end of each minute
+            print("Min/max pulses {}/{}: {}".format(self.mincount, self.maxcount, self.record))
+            self.mincount = 100
+            self.maxcount = 0
+            self.record   = ""
 
     def read_secondhand(self):
         """ Report where the second hand SHOULD be
