@@ -152,6 +152,8 @@ class PulseClock:
             if self.whitecount > 15 and self.whitephase != 0: # OK, we've seen more than 15 whites when we shouldn't have done
                 print("Adjusting second hand by {} - from {} to {}".format(self.whitephase,self.sec_pos,self.sec_pos - self.whitephase))
                 self.sec_pos -= self.whitephase # Move the second hand position back to make the phase align
+                if self.whitephase % 2 == 1: # If it's an odd-even change then we also need to flip the polarity...
+                    self.polarity = 1-self.polarity
                 self.whitephase = 0
                 self.whitecount = 0
 
