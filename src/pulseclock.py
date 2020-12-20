@@ -122,7 +122,7 @@ class PulseClock:
         # More than 9 edges - assume the clock skipped forward by multiple seconds - try to guess how many...
         if 9 < count: 
             self.sec_pos += count // 5
-            print("Got {} pulses - sec hand position adjusted by +{}".format(count, count // 5)
+            print("Got {} pulses - sec hand position adjusted by +{}".format(count, count // 5))
 
         # Make sure that the seconds counter remains in the range 0-59
         self.sec_pos %= 60
