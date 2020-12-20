@@ -42,13 +42,9 @@ def main():
 
     # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
     ntp_settings = settings.load_settings("ntp.json")
-    #rtc = RTC()
-    #rtc.init(ds.rtc_tm)
-    #print("RTC set to    : {}".format(rtc.now()))
-    #rtc.ntp_sync(ntp_settings['NTP'], update_period = 900)
-
+    
     # Initialise "not too often" counters
-    next_ntp_sync = last_update = ds.rtc
+    next_ntp_sync = ds.rtc
 
     try:
         while True:
@@ -76,7 +72,7 @@ def main():
 
             # Update the non-volatile copy of the hand position
             ds.alarm1_tm  = clock.hands_tm
-            sleep_ms(10) # Allow time for this to complete
+            sleep_ms(10) # Allow time for this to complete - DS3231 write can fail otherwise
 
             # Tell the UI where the clock thinks the hands are
             ui.hands_tm   = clock.hands_tm
@@ -94,10 +90,10 @@ def main():
                 ntp_time  = ntptime.ntp_query(ntp_settings['NTP'])
                 old_time  = ds.rtc
                 if ntp_time is not None:
-                    ds.rtc        = ntp_time        # Copy the received time into the RTC as quickly as possible to minimise error
+                    #ds.rtc        = ntp_time        # Copy the received time into the RTC as quickly as possible to minimise error
                     next_ntp_sync = ntp_time + 3654 # Just a bit less than once an hour
                     ui.ntp_sync   = True
-                    print("Synced RTC to NTP - {} (delta {})".format(ds.rtc_tod_tm, old_time - ntp_time))
+                    print("Sync (disabled) RTC to NTP - {} (delta {})".format(ds.rtc_tod_tm, old_time - ntp_time))
                 else:
                     ui.ntp_sync   = False
                     next_ntp_sync = ds.rtc + 321 # Just a bit more than five minutes

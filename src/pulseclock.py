@@ -22,6 +22,10 @@ class PulseClock:
         self.maxcount   = 0
         self.mincount   = 100
         self.countzero  = 0
+        self.whitephase = 0
+        self.whitecount = 0
+
+        self.record     = ""
         
         self.step()         # Ensure the mechanism is fully aligned not in some midway state
         
@@ -86,6 +90,14 @@ class PulseClock:
         """
         (state, count, self.edgecount) = (self.sensor.value(), self.edgecount, 0) # Copy the count and then reset it - semi-atomic!
 
+        if state == 1:
+            self.record += "W"
+
+        if count < 10:
+            self.record += str(count)
+        else:
+            self.record += " "+str(count)+" "
+
         if count > self.maxcount:
             self.maxcount = count
 
@@ -102,7 +114,7 @@ class PulseClock:
         else:
             self.countzero = 0 # Got some motion - reset the zero counter
 
-        # 1-7 edges is probably a single step
+        # 1-8 edges is probably a single step
         if 0 < count and count <= 8: 
             self.sec_pos += 1
         
@@ -121,11 +133,25 @@ class PulseClock:
             print("counted {} pulses - hand at {:02d} - sensor black".format(count, self.sec_pos))
 
         if self.sec_pos == 59:
-            print("Min/max pulses {}/{}".format(self.mincount, self.maxcount))
+            print("Min/max pulses {}/{}: {}".format(self.mincount, self.maxcount, self.record))
             self.mincount = 100
             self.maxcount = 0
+            self.record   = ""
 
         # TODO - Add code to check for early/missed white sectors
+        if state == 1:                                     # Detecting white
+            if self.sec_pos % 4 == self.whitephase:          # White is in the "expected" phase
+                self.whitecount += 1
+            else:
+                self.whitephase = self.sec_pos % 4           # White appears to be consistently in the same position
+                self.whitecount = 0
+                print("Unexpected white #{} (phase {})".format(self.whitecount, self.whitephase))
+
+            if self.whitecount > 15 and self.whitephase != 0: # OK, we've seen more than 15 whites when we shouldn't have done
+                print("Adjusting second hand by {}".format(self.whitephase))
+                self.sec_pos -= self.whitephase # Move the second hand position back to make the phase align
+                self.whitephase = 0
+                self.whitecount = 0
 
     def read_secondhand(self):
         """ Report where the second hand SHOULD be
