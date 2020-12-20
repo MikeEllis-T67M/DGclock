@@ -26,6 +26,7 @@ class PulseClock:
         self.whitecount = 0
 
         self.record     = ""
+        self.speed      = "S"
         
         self.step()         # Ensure the mechanism is fully aligned not in some midway state
         
@@ -91,13 +92,13 @@ class PulseClock:
         (count, self.edgecount, state) = (self.edgecount, 0, self.sensor.value()) # Copy the count and then reset it - semi-atomic!
 
         # Debug: construct a record and print it once per minute
+        if state == 1: # Recording seeing white
+            self.record += "-" # Use a dash for whites since it is easier to scan in the resulting log
+
         if count < 10: # Record the number of pulses we got to get to this state
             self.record += str(count)
         else:
             self.record += " "+str(count)+" "
-
-        if state == 1: # Recording seeing white
-            self.record += "-" # Use a dash for whites since it is easier to scan in the resulting log
 
         if count > self.maxcount:
             self.maxcount = count
@@ -163,6 +164,10 @@ class PulseClock:
     def step(self):
         """ Step the clock forward by one second
         """
+        if self.speed == "F":
+            self.speed   = "S"
+            self.record += self.speed
+
         if self.sec_pos % 2 == self.polarity: # Determine the polarity of the pulse based upon the nominal current clock position
             self._dostep(self.pin_minus, self.pin_plus, self.pin_enable)
             #print("Positive pulse - ", end='')
@@ -175,6 +180,10 @@ class PulseClock:
     def faststep(self):
         """ Step the clock forward by one second
         """
+        if self.speed == "S":
+            self.speed   = "F"
+            self.record += self.speed
+
         if self.sec_pos % 2 == self.polarity: # Determine the polarity of the pulse based upon the nominal current clock position
             self._dofaststep(self.pin_minus, self.pin_plus, self.pin_enable)
             #print("Positive fast pulse - ", end='')
