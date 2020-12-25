@@ -50,19 +50,23 @@ class PulseClock:
             en (pin): Enable pin
         """        """ 
         """   
-        en.value(0)                    # Ensure the motor is disabled
+        en.value(1)                    # Ensure the motor is enabled
         ld.value(1)                    # Set up the pulse
-
-        for _ in range(self.config["PulseCount"]):
-            tr.value(0)
-            en.value(1)                    # Kick the motor
-            sleep_ms(self.config["Pulse"])
-            tr.value(1)                    # Stop 
-            sleep_ms(self.config["Dwell"])
-        
+        tr.value(0)
+        sleep_ms(self.config["Pulse"])
+        tr.value(1)
         sleep_ms(self.config["Stop"])
-        en.value(0)                    # Disable the driver ready for the next pulse
-        sleep_ms(self.config["Recover"])
+    
+        #for _ in range(self.config["PulseCount"]):
+        #    tr.value(0)
+        #    en.value(1)                    # Kick the motor
+        #    sleep_ms(self.config["Pulse"])
+        #    tr.value(1)                    # Stop 
+        #    sleep_ms(self.config["Dwell"])
+        # 
+        #sleep_ms(self.config["Stop"])
+        #en.value(0)                    # Disable the driver ready for the next pulse
+        #sleep_ms(self.config["Recover"])
         
     def _dofaststep(self, ld, tr, en):
         """ Step the clock forward one second
@@ -73,18 +77,25 @@ class PulseClock:
             en (pin): Enable pin
         """        """ 
         """   
-        en.value(0)                          # Ensure the motor is disabled
-        ld.value(1)                          # Set up the pulse
+        en.value(1)                    # Ensure the motor is enabled
+        ld.value(1)                    # Set up the pulse
         tr.value(0)
-
-        en.value(1)                               # Kick the motor
-        sleep_ms(self.config["FastPulse1"])        # Full pulse to start with
-        tr.value(1)                               # Actively stop the motor
-        sleep_ms(self.config["FastDwell"])
-        tr.value(0)                               # Second pulse half size
-        sleep_ms(self.config["FastPulse2"])
-        tr.value(1)                               # Second stop
+        sleep_ms(self.config["FastPulse1"])
+        tr.value(1)
         sleep_ms(self.config["FastStop"])
+
+        #en.value(1)                          # Ensure the motor is always enabled
+        #ld.value(1)                          # Set up the pulse
+        #tr.value(0)
+
+        #en.value(1)                               # Kick the motor
+        #sleep_ms(self.config["FastPulse1"])        # Full pulse to start with
+        #tr.value(1)                               # Actively stop the motor
+        #sleep_ms(self.config["FastDwell"])
+        #tr.value(0)                               # Second pulse half size
+        #sleep_ms(self.config["FastPulse2"])
+        #tr.value(1)                               # Second stop
+        #sleep_ms(self.config["FastStop"])
 
     def _update(self):
         """ Update the internal hand position reporting - should ONLY be called when stepping the clock

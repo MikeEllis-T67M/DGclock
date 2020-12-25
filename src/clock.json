@@ -6,10 +6,10 @@
 	"Pulse": 	  200,
 	"PulseCount": 1,
 	"Dwell": 	  0,
-	"Stop":       10,
+	"Stop":       40,
 	"Recover":    0,
 	"FastPulse1": 180,
 	"FastDwell":  40,
-	"FastPulse2": 120,
-	"FastStop":   140,
+	"FastPulse2": 0,
+	"FastStop":   40,
 }
