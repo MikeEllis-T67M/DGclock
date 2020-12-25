@@ -108,7 +108,7 @@ class PulseClock:
 
         # Update where the second hand SHOULD be - if it didn't move, don't update at all
         if 0 == count: # No edges detected - clock jammed! Try kicking it the other way in future...
-            print("No pulses!")
+            #print("No pulses!")
             self.countzero += 1
             if self.countzero % 4 == 0: # Got four zeros in a row - flipping the polarity just in case that helps
                 self.polarity = 1-self.polarity
@@ -116,8 +116,8 @@ class PulseClock:
         else:
             self.countzero = 0 # Got some motion - reset the zero counter
 
-        # 1-9 edges is probably a single step
-        if 0 < count and count <= 9: 
+        # 0-9 edges is probably a single step
+        if 0 <= count and count <= 9: 
             self.sec_pos += 1
         
         # More than 9 edges - assume the clock skipped forward by multiple seconds - try to guess how many...
@@ -150,7 +150,7 @@ class PulseClock:
                 self.whitephase = 0
                 self.whitecount = 0
 
-        if self.sec_pos == 0: # Print the debugging at the top of each minute
+        if self.sec_pos == 59: # Print the debugging at the top of each minute
             print("Min/max pulses {}/{}: {}".format(self.mincount, self.maxcount, self.record))
             self.mincount = 100
             self.maxcount = 0
