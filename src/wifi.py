@@ -26,7 +26,7 @@ class wifi:
 
         self.connected = False
 
-        if self.tries > 10: # Tried this connect ten times - try the next one
+        if self.tries > 9: # Tried this connection ten times - try the next one
             self.tries       = 0
             self.connection += 1
             self.connection %= len(self.config)
