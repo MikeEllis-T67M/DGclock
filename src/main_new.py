@@ -36,14 +36,12 @@ def main():
     # Intialise the display
     ui = dgui.DGUI(clock.hands_tm)
 
-    # Connect to the WiFi 
+    # Read the WiFi settings
     wifi_settings = settings.load_settings("wifi.json")
-    ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
+    network       = wifi.wifi(wifi_settings)
 
-    # Initialised the FreeRTOS RTC from the DS3231 battery-backed RTC, and set up NTP sync every 15 minutes
+    # Read the NTP server to use
     ntp_settings = settings.load_settings("ntp.json")
-    
-    # Initialise "not too often" counters
     next_ntp_sync = ds.rtc
 
     try:
@@ -55,6 +53,10 @@ def main():
             # Move the clock to show current TOD unless stopped
             if ui.mode == 'Normal' or ui.mode == 'Set':
                 clock.move(now)
+
+            # Update the non-volatile copy of the hand position
+            ds.alarm1_tm  = clock.hands_tm
+            sleep_ms(10) # Allow time for this to complete - DS3231 write can fail otherwise
 
             # LED states
             if clock.mode == "Run" and ui.now_tm[3] == 22 and ui.now_tm[4] == 0:
@@ -70,13 +72,12 @@ def main():
                 # Otherwise off
                 led.value(0)
 
-            # Update the non-volatile copy of the hand position
-            ds.alarm1_tm  = clock.hands_tm
-            sleep_ms(10) # Allow time for this to complete - DS3231 write can fail otherwise
-
             # Tell the UI where the clock thinks the hands are
             ui.hands_tm   = clock.hands_tm
             ui.clock_mode = clock.mode
+
+            # Check that we have a WiFi connection, and attempt to reconnect if it's dropped
+            network.connect()
 
             # Handle any button presses
             if ui.handle_buttons():  # Adjust hands was selected, so copy from UI to the clock
