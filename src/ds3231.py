@@ -554,7 +554,7 @@ class DS3231:
         """ Read the DS3231 temperature sensor
 
         Returns:
-            number: Current temperature in Celsius
+            number: Current temperature in Celsius, with quarter-degree resolution
             
         """
         buffer = bytearray(2)
