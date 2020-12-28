@@ -523,7 +523,12 @@ class DS3231:
         """
         buffer = bytearray(1)
         self.ds3231.readfrom_mem_into(DS3231_I2C_ADDR, 0x10, buffer)
-        return buffer[0]
+
+        # Handle conversion from unsigned byte to integer
+        if buffer[0] <= 127:
+            return buffer[0]
+        else:
+            return buffer[0]-256
 
     # -------------------------------------------------------------------------------------
     @cal.setter
@@ -540,5 +545,23 @@ class DS3231:
             The alarm interrupt enable will not be altered.        
         """
         buffer = bytearray(1)
-        buffer[0] = cal_to_set
+        buffer[0] = cal_to_set # Automatically handles negative numbers as two's complement
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 0x10, buffer)
+
+    # -------------------------------------------------------------------------------------
+    @property
+    def temp(self):
+        """ Read the DS3231 temperature sensor
+
+        Returns:
+            number: Current temperature in Celsius
+            
+        """
+        buffer = bytearray(2)
+        self.ds3231.readfrom_mem_into(DS3231_I2C_ADDR, 0x11, buffer)
+
+        temp = (buffer[0] & 0x7f) + ((buffer[1] >> 6) / 4.0)
+        if buffer[0] & 0x80:
+            return -temp
+        else:
+            return temp
