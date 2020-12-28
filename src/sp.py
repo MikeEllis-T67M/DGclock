@@ -28,3 +28,10 @@ wifi_settings = settings.load_settings("wifi.json")
 ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
 
 print(''.join('{:02x} '.format(x) for x in ds.read_ds3231_rtc()))
+
+import settings
+import wifi
+ws = settings.load_settings("wifi.json")
+w  = wifi.wifi(ws)
+w.connect()
+
