@@ -80,7 +80,7 @@ class PulseClock:
         en.value(1)                    # Ensure the motor is enabled
         ld.value(1)                    # Set up the pulse
         tr.value(0)
-        sleep_ms(self.config["FastPulse1"])
+        sleep_ms(self.config["FastPulse"])
         tr.value(1)
         sleep_ms(self.config["FastStop"])
 
