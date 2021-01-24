@@ -39,13 +39,14 @@ def ntp_query(host = "pool.ntp.org"):
 
     s.close()
 
-    secs = struct.unpack("!I", msg[40:44])[0]
-    frac = struct.unpack("!I", msg[44:48])[0]
+    secs   = struct.unpack("!I", msg[40:44])[0]
+    frac   = struct.unpack("!I", msg[44:48])[0]
+    millis = frac // 4294967
 
     buffer = ''.join('{:02x} '.format(x) for x in msg[40:48])
-    print("{} gave {} to {}.{}".format(host, buffer, secs, frac))
+    print("{} gave {} to {}.{:03d}".format(host, buffer, secs, millis))
     
-    return (secs - NTP_DELTA, frac // 4294967, rxts) # Convert from 1/1/1900 to 1/1/1970 EPOCH, and to milliseconds
+    return (secs - NTP_DELTA, millis, rxts) # Convert from 1/1/1900 to 1/1/1970 EPOCH, and to milliseconds
 
 # There's currently no timezone support in MicroPython, so
 # utime.localtime() will return UTC time (as if it was .gmtime())

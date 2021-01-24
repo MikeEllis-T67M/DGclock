@@ -96,12 +96,11 @@ def main():
                     #ds.rtc        = ntp_time        # Copy the received time into the RTC as quickly as possible to minimise error
 
                     error_ms = 1000 - millis # Convert fractional part to error in milliseconds
-                    print("Error in milliseconds {}".format(error_ms))
 
                     set_at_ticks = ticks_add(ticks, error_ms)
                     set_time     = ntp_time + 1
 
-                    print("Got {}.{} @ {} - setting {} @ {}".format(ntp_time, frac, ticks, set_time, set_at_ticks))
+                    print("Got {}.{:03d} @ {} - error in milliseconds {} - setting {} @ {}".format(ntp_time, millis, ticks, error_ms, set_time, set_at_ticks))
 
                     next_ntp_sync = ntp_time + 3654 # Just a bit less than once an hour
                     #print("Sync (disabled) RTC to NTP - {} (delta {})".format(ds.rtc_tod_tm, old_time - ntp_time))
