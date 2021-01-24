@@ -90,12 +90,12 @@ def main():
             # Periodically re-sync the clocks
             if ds.rtc > next_ntp_sync:
                 print("Querying {}".format(ntp_settings['NTP']))
-                (ntp_time, frac, ticks) = ntptime.ntp_query(ntp_settings['NTP'])
+                (ntp_time, millis, ticks) = ntptime.ntp_query(ntp_settings['NTP'])
                 old_time                = ds.rtc
                 if ntp_time is not None:
                     #ds.rtc        = ntp_time        # Copy the received time into the RTC as quickly as possible to minimise error
 
-                    error_ms = 1000 - (frac // 4294967) # Convert fractional part to error in milliseconds
+                    error_ms = 1000 - millis # Convert fractional part to error in milliseconds
                     print("Error in milliseconds {}".format(error_ms))
 
                     set_at_ticks = ticks_add(ticks, error_ms)
