@@ -1,13 +1,13 @@
 import network
-from utime import sleep_ms
+from utime import sleep_ms, ticks_ms, ticks_add
 
 class wifi:
     def __init__(self, config):
-        self.config     = config
-        self.connection = 0
-        self.tries      = 0
-        self.sta        = network.WLAN(network.STA_IF)
-        self.connected  = False
+        self.config       = config
+        self.connection   = -1
+        self.sta          = network.WLAN(network.STA_IF)
+        self.connected    = False
+        self.last_attempt = ticks_ms()
 
 
     def __repr__(self):
@@ -17,27 +17,29 @@ class wifi:
     def connect(self):
         """ Ensure we have a network connection. If not connection, try each set of credentials in turn
             up to ten times before trying the next connection.
-        """        
+        """ 
+
+        # Give the WiFi five seconds to actually do something
+        now = ticks_ms()
+        if now < ticks_add(self.last_attempt, 5000):
+            return
+        self.last_attempt = now
+
         if self.sta.isconnected():  # If we have an active connection, our work is done.
             if not self.connected:
                 print("Connected to connection {}".format(self.connection))
                 self.connected = True
             return
 
+        # We're not connected - so try the next connection
         self.connected = False
-
-        if self.tries > 9: # Tried this connection ten times - try the next one
-            self.tries       = 0
-            self.connection += 1
-            self.connection %= len(self.config)
-
-        # We're not connected - so try again
+        self.connection += 1
+        self.connection %= len(self.config)
         print("Trying WiFi connection #{}".format(self.connection))
         self.sta.active(True)
         sleep_ms(20)
         self.sta.config(dhcp_hostname = self.config[self.connection]['Hostname'])
         self.sta.connect(self.config[self.connection]['SSID'], self.config[self.connection]['Password'])
-        self.tries += 1
 
     def get_ip_addr(self):
         """ Get the current IP address
