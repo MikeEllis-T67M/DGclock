@@ -61,6 +61,8 @@ class DGClock:
             self.mode   = "Run"
             self.pc.step()
             self.hands += 1
+        elif diff > 43140:                            # Small backward error - don't set hand to 12
+            self.mode = "Wait"
         elif diff > 36000 and self._hands % 60 == 0:  # >10hr difference and second hand on 12 - just wait!
             self.mode = "Wait"
         else:                                         # Need to move fast to catch up
