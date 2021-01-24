@@ -2,10 +2,16 @@ try:
     import usocket as socket
 except:
     import socket
+
 try:
     import ustruct as struct
 except:
     import struct
+
+try:
+    from utime import ticks_ms as ticks_ms
+except:
+    from time import ticks_ms as ticks_ms
 
 # NTP counts seconds from Jan 1st 1900, MicroPython uses 1970
 # (date(1970, 1, 1) - date(1900, 1, 1)).days * 24*60*60
@@ -17,25 +23,29 @@ def ntp_query(host = "pool.ntp.org"):
     try:
         addr = socket.getaddrinfo(host, 123)[0][-1]
     except:
-        return None
+        print("Unable to get IP address for {}".format(host))
+        return (None, 0, 0)
     
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(1)
-        res = s.sendto(NTP_QUERY, addr)
-        msg = s.recv(48)
+        res  = s.sendto(NTP_QUERY, addr)
+        msg  = s.recv(48)
+        rxts = ticks_ms()
         #print("Received: {}".format(msg))
     except OSError: # Timeout
-        return None
-    finally:
-        try:
-            s.close() # TODO: Can sometimes fail with "local variable referenced before assignment"...???
-        except Exception:
-            pass
+        print("NTP Timeout from {}".format(host))
+        return (None, 0, 0)
 
-    val = struct.unpack("!I", msg[40:44])[0]
-    #print("Convert {} to {}".format(msg[40:44], val))
-    return val - NTP_DELTA # Convert from 1/1/1900 to 1/1/1970 EPOCH
+    s.close()
+
+    secs = struct.unpack("!I", msg[40:44])[0]
+    frac = struct.unpack("!I", msg[44:48])[0]
+
+    buffer = ''.join('{:02x} '.format(x) for x in msg[40:48])
+    print("{} gave {} to {}.{}".format(host, buffer, secs, frac))
+    
+    return (secs - NTP_DELTA, frac // 4294967, rxts) # Convert from 1/1/1900 to 1/1/1970 EPOCH, and to milliseconds
 
 # There's currently no timezone support in MicroPython, so
 # utime.localtime() will return UTC time (as if it was .gmtime())

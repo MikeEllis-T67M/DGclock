@@ -1,5 +1,5 @@
 from machine import I2C, Pin, RTC
-from utime import sleep_ms, time, mktime
+from utime import sleep_ms, time, mktime, ticks_ms, ticks_add, ticks_diff
 import ujson
 import display
 import gc
@@ -41,8 +41,9 @@ def main():
     network       = wifi.wifi(wifi_settings)
 
     # Read the NTP server to use
-    ntp_settings = settings.load_settings("ntp.json")
-    next_ntp_sync = ds.rtc
+    ntp_settings  = settings.load_settings("ntp.json")
+    next_ntp_sync = ds.rtc + 30 # First sync attempt after 30 seconds
+    set_time      = 0           # Resetting the DS RTC not needed
 
     try:
         while True:
@@ -88,19 +89,42 @@ def main():
 
             # Periodically re-sync the clocks
             if ds.rtc > next_ntp_sync:
-                ntp_time  = ntptime.ntp_query(ntp_settings['NTP'])
-                old_time  = ds.rtc
+                print("Querying {}".format(ntp_settings['NTP']))
+                (ntp_time, frac, ticks) = ntptime.ntp_query(ntp_settings['NTP'])
+                old_time                = ds.rtc
                 if ntp_time is not None:
                     #ds.rtc        = ntp_time        # Copy the received time into the RTC as quickly as possible to minimise error
+
+                    error_ms = 1000 - (frac // 4294967) # Convert fractional part to error in milliseconds
+                    print("Error in milliseconds {}".format(error_ms))
+
+                    set_at_ticks = ticks_add(ticks, error_ms)
+                    set_time     = ntp_time + 1
+
+                    print("Got {}.{} @ {} - setting {} @ {}".format(ntp_time, frac, ticks, set_time, set_at_ticks))
+
                     next_ntp_sync = ntp_time + 3654 # Just a bit less than once an hour
-                    ui.ntp_sync   = True
-                    print("Sync (disabled) RTC to NTP - {} (delta {})".format(ds.rtc_tod_tm, old_time - ntp_time))
+                    #print("Sync (disabled) RTC to NTP - {} (delta {})".format(ds.rtc_tod_tm, old_time - ntp_time))
                 else:
                     ui.ntp_sync   = False
                     next_ntp_sync = ds.rtc + 321 # Just a bit more than five minutes
                     print("NTP sync failed at  {}".format(ui.now_tm))
             else:
-                gc.collect()
+                gc.collect() # Don't waste time garbage collecting if we're also setting the clock
+
+            if set_time > 0:
+                tick_err = ticks_diff(ticks_ms(), set_at_ticks)
+                if -100 < tick_err and tick_err < 100: # Allow a 100ms "buffer"
+                    ds.rtc = set_time
+                    ui.ntp_sync   = True
+                    print("Set DS RTC {} ({}) @ {}".format(set_time, ds.rtc_tm, ticks_ms()))
+                    set_time = 0
+                elif tick_err > 100: # Missed - try again on the next second
+                    set_time += 1
+                    set_at_ticks = ticks_add(set_at_ticks, 1000)
+                    print("Missed the ticks - trying again @ {}".format(set_at_ticks))
+                else:
+                    print("Tick error {}".format(tick_err))
 
     except KeyboardInterrupt:
         # Try to relinquish the I2C bus
