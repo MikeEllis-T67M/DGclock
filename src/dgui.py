@@ -9,6 +9,7 @@ class DGUI:
     def __init__(self, current_hands):
         # Fixed initialisation
         self.mode            = "Normal"
+        self.timeout         = 0
         self.clock_mode      = "Starting"
         self.redraw          = True         # The screen changes completely - clear and re-write
         self.setmode         = 0
@@ -84,8 +85,17 @@ class DGUI:
         self.tft.text(hpos - offset, vpos - self.tft.fontSize()[1] //2, text, color)
 
     def handle_buttons(self):
+        if self.mode != "Normal" and self.timeout == self.now_tm[4]: 
+            # No button push for a couple of minutes - automatically select Normal mode
+            self.mode   = "Normal"
+            self.redraw = True
+            return False
+
         if not self.pressed_top and not self.pressed_bottom:
             return False # Nothing to do
+
+        # When should the current setting mode time out?
+        self.timeout = (self.now_tm[4] + 3) % 60 
         
         # Make sure the screen is redrawn next time around
         self.redraw  = True
