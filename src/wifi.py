@@ -21,7 +21,7 @@ class wifi:
 
         # Give the WiFi five seconds to actually do something
         now = ticks_ms()
-        if now < ticks_add(self.last_attempt, 5000):
+        if now < ticks_add(self.last_attempt, 15000):
             return
         self.last_attempt = now
 
