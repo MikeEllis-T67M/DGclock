@@ -15,7 +15,8 @@ ds.rtc_tm
 import settings
 import wifi
 wifi_settings = settings.load_settings("wifi.json")
-ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'], wifi_settings['Hostname'])
+network       = wifi.wifi(wifi_settings)
+network.connect()
 
 import ntptime
 ntp_settings = settings.load_settings("ntp.json")
@@ -29,9 +30,8 @@ ip_addr       = wifi.connect_sta(wifi_settings['SSID'], wifi_settings['Password'
 
 print(''.join('{:02x} '.format(x) for x in ds.read_ds3231_rtc()))
 
-import settings
-import wifi
-ws = settings.load_settings("wifi.json")
-w  = wifi.wifi(ws)
-w.connect()
+help('modules')
 
+import _thread
+import dgclockthread
+_thread.start_new_thread("Clock", dgclockthread.thread, ('clock.json', 0))

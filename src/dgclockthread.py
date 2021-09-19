@@ -1,5 +1,6 @@
 from utime import sleep_ms
 from machine import Pin
+import _thread
 
 import pulseclock
 import settings
@@ -23,7 +24,6 @@ class DGClock:
         self.hands = hands
         self.mode  = "Wait"
 
-
     def __repr__(self):
         pass
 
@@ -41,15 +41,19 @@ class DGClock:
 
     @hands.setter
     def hands(self, value):
-        self._hands       = int(value % 43200)    # Must be an integer in the range 00:00:00 to 11:59:59
-        self.pc.sec_pos   = self.hands % 60       
-        self.pc.edgecount = 0                     # The hands may have been moved manually - reset the edge counter
+        self._hands    = int(value % 43200)       # Must be an integer in the range 00:00:00 to 11:59:59
         
     @hands_tm.setter
     def hands_tm(self, value):
         self.hands = value[3] * 3600 + value[4] * 60 + value[5]
+        self.pc.sec_pos = self.hands % 60
 
     def move(self, wanted_time):
+        """ Move the clock one step toward the given time
+
+        Args:
+            wanted_time (int): The time the clock should be displaying, in seconds from 00:00:00 (12-hour format)
+        """
         wanted_time %= 43200 # Only care about the 12-hour portion of the time
 
         diff = (wanted_time - self._hands) % 43200
@@ -62,8 +66,6 @@ class DGClock:
             self.mode   = "Run"
             self.pc.step()
             self.hands += 1
-        elif diff > 43140:                            # Small backward error - don't set hand to 12
-            self.mode = "Wait"
         elif diff > 36000 and self._hands % 60 == 0:  # >10hr difference and second hand on 12 - just wait!
             self.mode = "Wait"
         else:                                         # Need to move fast to catch up
@@ -73,3 +75,35 @@ class DGClock:
 
         if (self.hands % 60) != self.pc.read_secondhand(): # TODO: Potential gotcha here around the minute boundary
             self.hands = (self.hands // 60) * 60 + self.pc.read_secondhand()
+
+def thread(config_filename, hands):
+    # Initialise the object which represents the clock
+    clock = DGClock(config_filename, hands)
+    current_time = hands
+
+    # Infinite loop processing messages
+    _thread.allowsuspend(True)
+    while True:
+
+        # Handling thread notifications
+        ntf = _thread.getnotification()
+        if ntf == _thread.EXIT:
+            return
+        if ntf == _thread.SUSPEND:
+            while _thread.wait() != _thread.RESUME:
+                pass
+
+        # Handle thread messages
+        (msg_type, sender, msg) = _thread.getmsg()
+        if msg_type == 1: # Integer message received - that's the desired time on the clock
+            current_time = msg
+
+        if msg_type == 2: # String message - many types possible
+            if msg[0] == 'H':  # H##### messages - the hands are at #####
+                clock.hands = int(msg[1:])
+            if msg[0] == 'R':  # R messages - reply with the current position of the hands
+                _thread.sendmsg(sender, clock.hands)
+
+        clock.move(current_time)
+
+        utime.sleep_ms(100)
