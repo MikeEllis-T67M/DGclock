@@ -143,15 +143,9 @@ class PulseClock:
         if state == 1:                                     # Detecting white
             if self.sec_pos % 4 == self.whitephase:          # White is in the "expected" phase
                 self.whitecount += 1
-                if self.whitephase != 0:
-                    print("Offset white     #{} (second {} phase {})".format(self.whitecount, self.sec_pos, self.whitephase))
             else:
                 self.whitephase = self.sec_pos % 4           # White appears to be consistently in the same position
                 self.whitecount = 0
-                if self.whitephase != 0:
-                    print("Unexpected white #{} (second {} phase {})".format(self.whitecount, self.sec_pos, self.whitephase))
-                else:
-                    print("White phase restored (second {})".format(self.sec_pos))
 
             if self.whitecount > 4 and self.whitephase != 0: # OK, we've seen more than 15 whites when we shouldn't have done
                 print("Adjusting second hand by {} - from {} to {}".format(self.whitephase,self.sec_pos,self.sec_pos - self.whitephase))
@@ -175,6 +169,8 @@ class PulseClock:
     def step(self):
         """ Step the clock forward by one second
         """
+        self._update()
+
         if self.speed == "F":
             self.speed   = "S"
             self.record += self.speed
@@ -186,11 +182,12 @@ class PulseClock:
             self._dostep(self.pin_plus, self.pin_minus, self.pin_enable)
             #print("Negative pulse - ", end='')
         
-        self._update()
 
     def faststep(self):
         """ Step the clock forward by one second
         """
+        self._update()
+        
         if self.speed == "S":
             self.speed   = "F"
             self.record += self.speed
@@ -202,4 +199,18 @@ class PulseClock:
             self._dofaststep(self.pin_plus, self.pin_minus, self.pin_enable)
             #print("Negative fast pulse - ", end='')
         
-        self._update()
+
+    def test(self):
+        self.edgecount = 0
+
+        if self.sec_pos % 2 == self.polarity: # Determine the polarity of the pulse based upon the nominal current clock position
+            self._dostep(self.pin_minus, self.pin_plus, self.pin_enable)
+        else:
+            self._dostep(self.pin_plus, self.pin_minus, self.pin_enable)
+
+        for i in range(20):
+            print(self.edgecount)
+
+        print(self.sensor.value())
+
+        self.sec_pos += 1
