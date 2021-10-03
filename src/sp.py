@@ -1,8 +1,3 @@
-# Last NTP check started at 1605987450 (21st November)
-# Check at   1607715597 when DS3231 read 1607715599
-# Drift was 2 in 1728147 secs: 1.15730895577749ppm  (11th December)
-# Cal factor adjusted to -12 (== -1.2ppm)
-
 from machine import I2C, RTC, Pin
 from network import WLAN, AP_IF, STA_IF
 import ds3231
@@ -35,3 +30,9 @@ help('modules')
 import _thread
 import dgclockthread
 _thread.start_new_thread("Clock", dgclockthread.thread, ('clock.json', 0))
+
+import settings
+import pulseclock
+clock_settings = settings.load_settings("clock.json")
+pc = pulseclock.PulseClock(clock_settings, 0)
+pc.test()
