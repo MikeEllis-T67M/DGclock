@@ -42,8 +42,8 @@ def main():
 
     # Read the NTP server to use
     ntp_settings  = settings.load_settings("ntp.json")
-    next_ntp_sync = ds.rtc + 30 # First sync attempt after 30 seconds
-    set_time      = 0           # Resetting the DS RTC not needed
+    next_ntp_sync = ds.rtc + 120 # First sync attempt after 120 seconds
+    set_time      = 0            # Resetting the DS RTC not needed
 
     try:
         while True:
