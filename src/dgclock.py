@@ -71,5 +71,6 @@ class DGClock:
             self.pc.faststep()
             self.hands += 1
 
-        if (self.hands % 60) != self.pc.read_secondhand(): # TODO: Potential gotcha here around the minute boundary
+        if (self.hands % 60) == 30 and self.pc.read_secondhand() != 30:
+            print("Second hand adjusted from {} to {}".format(self.hands.self.pc.read_secondhand()))
             self.hands = (self.hands // 60) * 60 + self.pc.read_secondhand()
