@@ -42,12 +42,16 @@ class DGClock:
     @hands.setter
     def hands(self, value):
         self._hands       = int(value % 43200)    # Must be an integer in the range 00:00:00 to 11:59:59
-        self.pc.sec_pos   = self.hands % 60       
-        self.pc.edgecount = 0                     # The hands may have been moved manually - reset the edge counter
         
     @hands_tm.setter
     def hands_tm(self, value):
         self.hands = value[3] * 3600 + value[4] * 60 + value[5]
+
+    def hands_reset(self, value):
+        # Just like setting the hands, but also tell the pulseclock that we've moved them
+        self.hands         = value
+        self.pc.sec_pos    = self.hands % 60
+        self.pc.edgecount  = 0
 
     def move(self, wanted_time):
         wanted_time %= 43200 # Only care about the 12-hour portion of the time
@@ -71,6 +75,7 @@ class DGClock:
             self.pc.faststep()
             self.hands += 1
 
+        # Check the second hand position at the bottom of the minute to avoid fence-post errors
         if (self.hands % 60) == 30 and self.pc.read_secondhand() != 30:
-            print("Second hand adjusted from {} to {}".format(self.hands.self.pc.read_secondhand()))
+            print("Second hand adjusted from {} to {}".format(self.hands % 60, self.pc.read_secondhand()))
             self.hands = (self.hands // 60) * 60 + self.pc.read_secondhand()

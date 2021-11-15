@@ -117,29 +117,6 @@ class PulseClock:
         if count < self.mincount:
             self.mincount = count
 
-        # TODO - Add code to check for early/missed white sectors
-        if state == 1:                                     # Detecting white
-            if self.sec_pos % 4 == self.whitephase:          # White is in the "expected" phase
-                self.whitecount += 1
-            else:
-                self.whitephase = self.sec_pos % 4           # White appears to be consistently in the same position
-                self.whitecount = 0
-
-            if self.whitecount > 4 and self.whitephase != 0: # OK, we've seen more than 15 whites when we shouldn't have done
-                print("Adjusting second hand by {} - from {} to {}".format(self.whitephase,self.sec_pos,self.sec_pos - self.whitephase))
-                self.sec_pos -= self.whitephase # Move the second hand position back to make the phase align
-                if self.whitephase % 2 == 1: # If it's an odd-even change then we also need to flip the polarity...
-                    self.polarity = 1-self.polarity
-                self.whitephase = 0
-                self.whitecount = 0
-                print("Adjusted position {}".format(self.sec_pos))
-
-        if self.sec_pos == 59: # Print the debugging at the top of each minute
-            print("Min/max pulses {}/{}: {}".format(self.mincount, self.maxcount, self.record))
-            self.mincount = 100
-            self.maxcount = 0
-            self.record   = ""
-
         # Update where the second hand SHOULD be - if it didn't move, don't update at all
         if 0 == count: # No edges detected - clock jammed! Try kicking it the other way in future...
             #print("No pulses!")
@@ -157,11 +134,39 @@ class PulseClock:
         # More than 9 edges - assume the clock skipped forward by multiple seconds - try to guess how many...
         if 9 < count: 
             self.sec_pos += count // 5
-            print("Got {} pulses - sec hand position adjusted by +{}".format(count, count // 5))
+            #print("Got {} pulses - sec hand position adjusted by +{}".format(count, count // 5))
 
         # Make sure that the seconds counter remains in the range 0-59
         self.sec_pos %= 60
         
+        # TODO - Add code to check for early/missed white sectors
+        if state == 1:                                     # Detecting white
+            if self.sec_pos % 4 == self.whitephase:          # White is in the "expected" phase
+                self.whitecount += 1
+            else:
+                self.whitephase = self.sec_pos % 4           # White appears to be consistently in the same position
+                self.whitecount = 0
+
+            if self.whitephase == 0 and self.whitecount >10: # Correct phase - so don't both counting how correct! (Avoids counter wrapping)
+                self.whitecount = 10
+
+            if self.whitecount > 6 and self.whitephase != 0: # OK, we've seen more than 15 steps when we shouldn't have done
+                print("Adjusting second hand by {} - from {} to {}".format(self.whitephase,self.sec_pos,self.sec_pos - self.whitephase))
+                self.sec_pos -= self.whitephase # Move the second hand position back to make the phase align
+                if self.whitephase % 2 == 1: # If it's an odd-even change then we also need to flip the polarity...
+                    self.polarity = 1-self.polarity
+                self.whitephase = 0
+                self.whitecount = 0
+
+        # Debugging for the hand correction algorithm
+        #print("Second {}: {} edges, {}, white {}/{}".format(self.sec_pos, count, state, self.whitephase, self.whitecount))
+
+        if self.sec_pos == 59: # Print the debugging at the top of each minute
+            print("Min/max pulses {}/{}: {}".format(self.mincount, self.maxcount, self.record))
+            self.mincount = 100
+            self.maxcount = 0
+            self.record   = ""
+
     def read_secondhand(self):
         """ Report where the second hand SHOULD be
         """
@@ -188,7 +193,7 @@ class PulseClock:
         """ Step the clock forward by one second
         """
         self._update()
-        
+
         if self.speed == "S":
             self.speed   = "F"
             self.record += self.speed
@@ -200,7 +205,6 @@ class PulseClock:
             self._dofaststep(self.pin_plus, self.pin_minus, self.pin_enable)
             #print("Negative fast pulse - ", end='')
         
-
     def test(self):
         self.edgecount = 0
 
@@ -212,6 +216,6 @@ class PulseClock:
         for i in range(20):
             print(self.edgecount)
 
-        print("End state: {}".format(self.sensor.value()))
+        print(self.sensor.value())
 
         self.sec_pos += 1

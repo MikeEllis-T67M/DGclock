@@ -82,12 +82,12 @@ def main():
 
             # Handle any button presses
             if ui.handle_buttons():  # Adjust hands was selected, so copy from UI to the clock
-                clock.hands_tm = ui.time_to_set
+                clock.hands_reset(ui.time_to_set)
 
             # Update the screen
             ui.update_screen()
 
-            # Periodically re-sync the clocks
+            # Periodically re-sync the clocks to NTP
             if ds.rtc > next_ntp_sync:
                 print("Querying {}".format(ntp_settings['NTP']))
                 (ntp_time, millis, ticks) = ntptime.ntp_query(ntp_settings['NTP'])
